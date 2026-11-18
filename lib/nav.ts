@@ -10,7 +10,10 @@ export interface NavSection { id: string; label: string; caption?: string; items
  */
 export function buildNav(user: User | null, projectId: string | null, projectName?: string | null): NavSection[] {
   const sections: NavSection[] = [
-    { id: "workspace", label: "WORKSPACE", items: [{ id: "projects", href: "/projects", label: "Projects", icon: "◈", exact: true }] },
+    { id: "workspace", label: "WORKSPACE", items: [
+      { id: "projects", href: "/projects", label: "Projects", icon: "◈", exact: true },
+      { id: "languages", href: "/languages", label: "Languages", icon: "◎" },
+    ] },
   ];
   if (projectId) {
     const base = `/projects/${projectId}`;
@@ -31,6 +34,7 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
         { id: "users", href: "/admin/users", label: "Users", icon: "◍" },
         { id: "admin-projects", href: "/admin/projects", label: "Projects & members", icon: "▦" },
         { id: "terminology", href: "/admin/terminology", label: "Terminology", icon: "❡" },
+        { id: "knowledge", href: "/admin/knowledge", label: "Knowledge base", icon: "❖" },
         { id: "readiness", href: "/admin/readiness", label: "Language readiness", icon: "◐" },
       ],
     });

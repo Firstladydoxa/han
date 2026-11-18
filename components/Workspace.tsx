@@ -9,6 +9,7 @@ import { ReviewPanel } from "./ReviewPanel";
 import { Alert, EmptyState, Spinner, StatusChip } from "./ui";
 
 const ACTIVE = new Set(["queued", "processing"]);
+const askHan = (projectId: string, id: string) => window.location.assign(`/projects/${projectId}/chat?about=${encodeURIComponent(id)}`);
 
 export function Workspace({ project, names, openTranslationId }: { project: ProjectDetail; names: Record<string, string>; openTranslationId?: string | null }) {
   const [jobs, setJobs] = useState<JobSummary[] | null>(null);
@@ -55,7 +56,7 @@ export function Workspace({ project, names, openTranslationId }: { project: Proj
         {jobId ? <JobView key={jobId} jobId={jobId} project={project} onChanged={() => void loadJobs()} />
           : openTranslationId ? (
             <div className="card"><h2 className="mb-3 text-lg font-semibold">Quick translation</h2>
-              <ReviewPanel translationId={openTranslationId} canApprove={project.can_approve} /></div>
+              <ReviewPanel translationId={openTranslationId} canApprove={project.can_approve} onAskHan={() => askHan(project.id, openTranslationId)} /></div>
           ) : <EmptyState title="Select or create a job">Choose a job above to review its segments.</EmptyState>}
       </section>
     </div>
@@ -204,7 +205,7 @@ function ActiveSegment({ seg, job, project, onChanged }: { seg: JobSegment; job:
   if (!seg.current_version) return <EmptyState title="No draft for this segment">HAN couldn&apos;t prepare a draft. Please translate it manually or try again later.</EmptyState>;
   return (
     <div>
-      <ReviewPanel translationId={seg.segment_id} canApprove={project.can_approve} onChanged={onChanged}
+      <ReviewPanel translationId={seg.segment_id} canApprove={project.can_approve} onChanged={onChanged} onAskHan={() => askHan(project.id, seg.segment_id)}
         context={{
           warnings: seg.warnings,
           tm_matches: tm.map((m) => ({ source_text: m.source_text, target_text: m.target_text, match_percent: m.match_percent, tm_id: m.tm_id })),

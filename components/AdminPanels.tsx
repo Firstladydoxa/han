@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { api, ApiError, type AdminProject, type AdminTerm, type AdminUser, type Direction, type Language, type Member, type Role, type Tier } from "@/lib/api";
+import { api, ApiError, type AdminDirection, type AdminProject, type AdminTerm, type AdminUser, type Direction, type Language, type Member, type Role, type Tier } from "@/lib/api";
 import { formatDate, ROLE_LABEL, TIER_LABEL } from "@/lib/labels";
 import { Alert, EmptyState, Spinner, TierBadge } from "./ui";
 
@@ -194,14 +194,32 @@ export function TerminologyPanel() {
   );
 }
 
+const TECH_STYLE: Record<string, string> = { passed: "text-emerald-300", degraded: "text-amber-300", failed: "text-red-300", untested: "text-ink-muted" };
+const VALIDATION = ["pending", "in_review", "validated", "rejected"] as const;
+const PAGE = 80;
+
 export function ReadinessPanel() {
   const dirs = useLoad(api.admin.directions);
   const langs = useLoad<Language[]>(api.languages);
   const [pending, setPending] = useState<Record<string, { tier: Tier; note: string }>>({});
   const [add, setAdd] = useState({ source: "en", target: "de", tier: "experimental" as Tier });
   const [notice, setNotice] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  const [q, setQ] = useState("");
+  const [tierF, setTierF] = useState<"all" | Tier>("all");
+  const [techF, setTechF] = useState("all");
+  const [limit, setLimit] = useState(PAGE);
+  const [tests, setTests] = useState<Record<string, string>>({});
   const key = (d: Pick<Direction, "source_code" | "target_code">) => `${d.source_code}>${d.target_code}`;
-  const rows = useMemo(() => dirs.data ?? [], [dirs.data]);
+  const all = useMemo(() => dirs.data ?? [], [dirs.data]);
+  const rows = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return all.filter((d) => (tierF === "all" || d.readiness_tier === tierF) && (techF === "all" || d.technical_status === techF) && (!t || key(d).includes(t)));
+  }, [all, q, tierF, techF]);
+  const summary = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const d of all) c[d.readiness_tier] = (c[d.readiness_tier] ?? 0) + 1;
+    return c;
+  }, [all]);
 
   async function save() {
     const changes = Object.entries(pending).map(([k, v]) => { const [source_code = "", target_code = ""] = k.split(">"); return { source_code, target_code, readiness_tier: v.tier, review_note: v.note || undefined }; });
@@ -212,30 +230,60 @@ export function ReadinessPanel() {
     e.preventDefault();
     try { await api.admin.putDirections([{ source_code: add.source, target_code: add.target, readiness_tier: add.tier }]); dirs.reload(); setNotice({ kind: "success", text: "Language pair added." }); } catch (err) { setNotice({ kind: "error", text: errText(err) }); }
   }
+  async function enablePilot() {
+    if (!window.confirm("Open every technically verified English pair for controlled testing? These stay Experimental and are visible only to pilot projects. Nothing becomes Production.")) return;
+    try { const r = await api.admin.enablePilot(); dirs.reload(); setNotice({ kind: "success", text: `Controlled testing enabled for ${String(r.directions_enabled ?? 0)} directions.` }); } catch (err) { setNotice({ kind: "error", text: errText(err) }); }
+  }
+  async function runTest(d: AdminDirection) {
+    setTests((t) => ({ ...t, [key(d)]: "Testing…" }));
+    try { const r = await api.admin.testDirection({ source_code: d.source_code, target_code: d.target_code }); setTests((t) => ({ ...t, [key(d)]: `${r.technical_status}${r.flag ? ` (${r.flag.replace("_", " ")})` : ""}: ${r.output.slice(0, 80)}` })); dirs.reload(); }
+    catch (err) { setTests((t) => ({ ...t, [key(d)]: errText(err) })); }
+  }
+  async function validate(d: AdminDirection, v: AdminDirection["validation_status"]) {
+    try { await api.admin.setValidation({ source_code: d.source_code, target_code: d.target_code, validation_status: v }); dirs.reload(); } catch (err) { setNotice({ kind: "error", text: errText(err) }); }
+  }
   return (
     <Section title="Language readiness">
-      <p className="text-sm text-ink-muted">Readiness is set per direction. A direction is only offered to translators once it is marked Production, Assisted or (for pilot projects) Experimental.</p>
+      <p className="text-sm text-ink-muted">Three independent things are tracked per direction: the <strong>tier</strong> (what translators may use), the <strong>technical check</strong> (does the system produce usable output) and <strong>human validation</strong> (has a qualified reviewer judged the quality). A passing technical check never makes a language Production; that is a human decision.</p>
+      <p className="text-xs text-ink-muted">Directions by tier: {TIERS.map((t) => `${TIER_LABEL[t]} ${summary[t] ?? 0}`).join(" · ")}</p>
       {notice ? <Alert kind={notice.kind}>{notice.text}</Alert> : null}
       {dirs.error ? <Alert>{dirs.error}</Alert> : null}
+      <div className="flex flex-wrap items-end gap-3">
+        <button type="button" className="btn btn-secondary" onClick={() => void enablePilot()}>Enable verified languages for controlled testing</button>
+      </div>
       <form onSubmit={addPair} className="flex flex-wrap items-end gap-3">
         <div><label className="label" htmlFor="d-src">From</label><select id="d-src" className="input" value={add.source} onChange={(e) => setAdd({ ...add, source: e.target.value })}>{langs.data?.map((l) => <option key={l.code} value={l.code}>{l.display_name}</option>)}</select></div>
         <div><label className="label" htmlFor="d-tgt">To</label><select id="d-tgt" className="input" value={add.target} onChange={(e) => setAdd({ ...add, target: e.target.value })}>{langs.data?.map((l) => <option key={l.code} value={l.code}>{l.display_name}</option>)}</select></div>
         <div><label className="label" htmlFor="d-tier">Tier</label><select id="d-tier" className="input" value={add.tier} onChange={(e) => setAdd({ ...add, tier: e.target.value as Tier })}>{TIERS.map((t) => <option key={t} value={t}>{TIER_LABEL[t]}</option>)}</select></div>
         <button className="btn btn-secondary" type="submit">Add pair</button>
       </form>
-      {!dirs.data ? <Spinner /> : rows.length === 0 ? <p className="text-sm text-ink-muted">No directions defined. Every pair is unsupported until you add it.</p> : (
+      <div className="flex flex-wrap items-end gap-3">
+        <div><label className="label" htmlFor="f-q">Filter by code</label><input id="f-q" className="input" placeholder="e.g. yo" value={q} onChange={(e) => { setQ(e.target.value); setLimit(PAGE); }} /></div>
+        <div><label className="label" htmlFor="f-tier">Tier</label><select id="f-tier" className="input" value={tierF} onChange={(e) => { setTierF(e.target.value as "all" | Tier); setLimit(PAGE); }}><option value="all">All tiers</option>{TIERS.map((t) => <option key={t} value={t}>{TIER_LABEL[t]}</option>)}</select></div>
+        <div><label className="label" htmlFor="f-tech">Technical check</label><select id="f-tech" className="input" value={techF} onChange={(e) => { setTechF(e.target.value); setLimit(PAGE); }}>{["all", "passed", "degraded", "failed", "untested"].map((t) => <option key={t} value={t}>{t === "all" ? "Any" : t}</option>)}</select></div>
+      </div>
+      {!dirs.data ? <Spinner /> : rows.length === 0 ? <p className="text-sm text-ink-muted">No directions match.</p> : (
         <>
+          <p className="text-xs text-ink-muted">Showing {Math.min(limit, rows.length)} of {rows.length}</p>
           <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase text-ink-muted"><tr><th className="py-2 pr-4">Direction</th><th className="pr-4">Current</th><th className="pr-4">New tier</th><th>Review note</th></tr></thead>
-            <tbody>{rows.map((d) => { const k = key(d); const p = pending[k]; return (
-              <tr key={k} className="border-t border-line">
+            <thead className="text-xs uppercase text-ink-muted"><tr><th className="py-2 pr-4">Direction</th><th className="pr-4">Current</th><th className="pr-4">New tier</th><th className="pr-4">Technical</th><th className="pr-4">Human validation</th><th>Review note</th></tr></thead>
+            <tbody>{rows.slice(0, limit).map((d) => { const k = key(d); const p = pending[k]; return (
+              <tr key={k} className="border-t border-line align-top">
                 <td className="py-2 pr-4 font-semibold">{d.source_code} → {d.target_code}</td><td className="pr-4"><TierBadge tier={d.readiness_tier} /></td>
                 <td className="pr-4"><label className="sr-only" htmlFor={`t-${k}`}>Tier for {k}</label>
                   <select id={`t-${k}`} className="input min-h-[34px] py-1" value={p?.tier ?? d.readiness_tier} onChange={(e) => setPending({ ...pending, [k]: { tier: e.target.value as Tier, note: p?.note ?? d.review_note ?? "" } })}>{TIERS.map((t) => <option key={t} value={t}>{TIER_LABEL[t]}</option>)}</select></td>
+                <td className="pr-4 text-xs"><span className={TECH_STYLE[d.technical_status]}>{d.technical_status}</span>
+                  <button type="button" className="ml-2 underline" onClick={() => void runTest(d)}>Test</button>
+                  {tests[k] ? <span className="mt-1 block max-w-[260px] break-words text-ink-muted">{tests[k]}</span> : null}</td>
+                <td className="pr-4"><label className="sr-only" htmlFor={`v-${k}`}>Validation for {k}</label>
+                  <select id={`v-${k}`} className="input min-h-[34px] py-1" value={d.validation_status} onChange={(e) => void validate(d, e.target.value as AdminDirection["validation_status"])}>{VALIDATION.map((v) => <option key={v} value={v}>{v.replace("_", " ")}</option>)}</select></td>
                 <td><label className="sr-only" htmlFor={`n-${k}`}>Note for {k}</label>
                   <input id={`n-${k}`} className="input min-h-[34px] py-1" value={p?.note ?? d.review_note ?? ""} onChange={(e) => setPending({ ...pending, [k]: { tier: p?.tier ?? d.readiness_tier, note: e.target.value } })} /></td>
               </tr>); })}</tbody></table></div>
-          <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={Object.keys(pending).length === 0}>Save changes</button>
+          <div className="flex gap-3">
+            {rows.length > limit ? <button type="button" className="btn btn-secondary" onClick={() => setLimit(limit + PAGE)}>Show more</button> : null}
+            <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={Object.keys(pending).length === 0}>Save changes</button>
+          </div>
         </>
       )}
     </Section>

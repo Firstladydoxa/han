@@ -19,6 +19,8 @@ interface Props {
   canApprove: boolean;
   context?: ReviewContext;
   onOpenWorkspace?: () => void;
+  /** Shows "Ask HAN about this": hands this translation to the chat as its one piece of context. */
+  onAskHan?: () => void;
   /** Called after a version is saved or a decision is recorded (lets a parent refresh progress). */
   onChanged?: () => void;
   /** Test seam / reuse: provide a loaded translation instead of fetching. */
@@ -29,7 +31,7 @@ interface Props {
  * Review panel: shows the suggestion, lets the translator edit (each save = a NEW version) and, only when
  * permitted, approve or reject that exact version. Approval is always an explicit button click + confirmation.
  */
-export function ReviewPanel({ translationId, canApprove, context, onOpenWorkspace, onChanged, initial }: Props) {
+export function ReviewPanel({ translationId, canApprove, context, onOpenWorkspace, onAskHan, onChanged, initial }: Props) {
   const [translation, setTranslation] = useState<Translation | null>(initial ?? null);
   const [selectedId, setSelectedId] = useState<string | null>(initial?.current_version_id ?? null);
   const [text, setText] = useState("");
@@ -119,6 +121,7 @@ export function ReviewPanel({ translationId, canApprove, context, onOpenWorkspac
           </>
         ) : null}
         {onOpenWorkspace ? <button type="button" className="btn btn-secondary" onClick={onOpenWorkspace}>Open in Workspace</button> : null}
+        {onAskHan ? <button type="button" className="btn btn-secondary" onClick={onAskHan}>Ask HAN about this</button> : null}
       </div>
       {!canApprove ? <p className="text-xs text-ink-muted">Approval isn&apos;t available to your role in this project.</p> : null}
       {dirty ? <p className="text-xs text-ink-muted">Save your edits before approving, so the approval applies to exactly what you reviewed.</p> : null}

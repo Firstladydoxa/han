@@ -37,10 +37,34 @@ export interface Job { job_id: string; project_id: string; title: string | null;
 export interface JobSummary { job_id: string; title: string | null; source_language: string; target_language: string; status: JobStatus; progress: JobProgress; created_at: string }
 export interface TMResult { tm_id: string; source_text: string; target_text: string; match_percent: number; match_type: "exact" | "fuzzy"; approved_at: string; provenance: Record<string, string> }
 export interface TermResult { term_id: string; source_term: string; target_term: string; definition: string | null; domain: string | null; part_of_speech: string | null; usage_note: string | null; forbidden: string[]; status: string }
+export interface SourceRef { title: string; category: string; version: number | null }
 export interface ChatResponse {
   conversation_id: string; reply: string; translation: TranslateResponse | null;
   clarification: { question: string; field: string } | null; actions: { type: "open_in_workspace"; translation_id: string }[];
+  sources?: SourceRef[]; message_id?: string | null; title?: string | null;
 }
+export interface ChatMessageOut {
+  id: string; seq: number; role: "user" | "assistant"; content: string; kind: string; created_at: string;
+  translation: TranslateResponse | null; clarification: { question: string; field: string } | null;
+  actions: { type: "open_in_workspace"; translation_id: string }[]; sources: SourceRef[];
+}
+export interface ConversationSummary {
+  id: string; project_id: string | null; project_name: string | null; title: string; status: string; created_at: string; updated_at: string;
+  last_message_at: string | null; message_count: number; preview: string | null;
+}
+export interface ConversationDetail extends ConversationSummary { messages: ChatMessageOut[]; has_more_before: boolean; starters: string[] }
+export type Availability = "enabled" | "enabled_with_review" | "controlled_testing" | "not_enabled";
+export interface LanguageSupport { code: string; name: string; native_name: string | null; script: string | null; tier: Tier; availability: Availability; reviewed: boolean }
+export interface AdminDirection extends Direction {
+  technical_status: "untested" | "passed" | "degraded" | "failed"; technical_checked_at: string | null; technical_detail: Record<string, unknown> | null;
+  validation_status: "pending" | "in_review" | "validated" | "rejected";
+}
+export interface KnowledgeVersion { id: string; version_number: number; filename: string | null; note: string | null; created_at: string; approved_at: string | null; is_active: boolean; preview: string | null; text: string | null }
+export interface KnowledgeDoc {
+  id: string; title: string; category: string; status: string; languages: string[]; audience_roles: string[]; project_id: string | null; project_name: string | null;
+  system_managed: boolean; version_count: number; chunk_count: number; approved_version: number | null; updated_at: string;
+}
+export interface KnowledgeDetail extends KnowledgeDoc { versions: KnowledgeVersion[] }
 export interface AdminUser extends User { engine_details_granted: boolean; created_at: string; generated_password?: string | null }
 export interface AdminProject {
   id: string; name: string; client: string | null; domain: string | null; style: string | null; instructions: string | null; status: string;
@@ -64,19 +88,21 @@ let csrfToken = "";
 export function setCsrf(token: string): void { csrfToken = token; }
 export function getCsrf(): string { return csrfToken; }
 
-type Method = "GET" | "POST" | "PUT" | "PATCH";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 const AUTH_PATHS = ["/v1/auth/login", "/v1/auth/me"];
 
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const form = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !form) headers["Content-Type"] = "application/json";
   if (method !== "GET") headers["X-CSRF-Token"] = csrfToken;
   let res: Response;
   try {
-    res = await fetch(path, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(path, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : form ? (body as FormData) : JSON.stringify(body) });
   } catch {
     throw new ApiError(0, "network_error", "I couldn't reach the service. Please check your connection and try again.");
   }
+  if (res.status === 204) return undefined as T;
   if (res.ok) return (await res.json()) as T;
   let code = "error";
   let message = GENERIC;
@@ -118,6 +144,16 @@ export const api = {
   translate: (b: { project_id: string; source_language: string; target_language: string; text: string; context?: string }) =>
     request<TranslateResponse>("POST", "/v1/translate", b),
   chat: (b: { project_id: string; message: string; conversation_id?: string }) => request<ChatResponse>("POST", "/v1/chat", b),
+  languageSupport: () => request<LanguageSupport[]>("GET", "/v1/language-support"),
+  conversations: {
+    list: (p: { q?: string; status?: "active" | "archived"; project_id?: string; limit?: number } = {}) => request<ConversationSummary[]>("GET", `/v1/conversations${qs(p)}`),
+    create: (project_id?: string) => request<ConversationDetail>("POST", "/v1/conversations", project_id ? { project_id } : {}),
+    get: (id: string) => request<ConversationDetail>("GET", `/v1/conversations/${id}`),
+    older: (id: string, before_seq: number) => request<{ messages: ChatMessageOut[]; has_more_before: boolean }>("GET", `/v1/conversations/${id}/messages${qs({ before_seq })}`),
+    send: (id: string, b: { message: string; context_translation_id?: string }) => request<ChatResponse>("POST", `/v1/conversations/${id}/messages`, b),
+    patch: (id: string, b: { title?: string; status?: "active" | "archived" }) => request<ConversationSummary>("PATCH", `/v1/conversations/${id}`, b),
+    remove: (id: string) => request<void>("DELETE", `/v1/conversations/${id}`),
+  },
   translation: (id: string) => request<Translation>("GET", `/v1/translations/${id}`),
   saveVersion: (id: string, b: { target_text: string; parent_version_id: string; change_note?: string }) =>
     request<{ version: Version; warnings: Warning[] }>("POST", `/v1/translations/${id}/versions`, b),
@@ -146,7 +182,22 @@ export const api = {
     createTerm: (b: { project_id?: string; scope: "project" | "global"; source_language: string; target_language: string; source_term: string; target_term: string; status?: string }) =>
       request<AdminTerm>("POST", "/v1/admin/terminology", b),
     patchTerm: (id: string, b: { status?: string; comment?: string; target_term?: string }) => request<AdminTerm>("PATCH", `/v1/admin/terminology/${id}`, b),
-    directions: () => request<Direction[]>("GET", "/v1/admin/language-directions"),
+    directions: () => request<AdminDirection[]>("GET", "/v1/admin/language-directions"),
+    setValidation: (b: { source_code: string; target_code: string; validation_status: AdminDirection["validation_status"]; note?: string }) =>
+      request<AdminDirection>("PUT", "/v1/admin/language-directions/validation", b),
+    testDirection: (b: { source_code: string; target_code: string; text?: string }) =>
+      request<{ source_code: string; target_code: string; output: string; flag: string | null; technical_status: string }>("POST", "/v1/admin/language-directions/test", b),
+    enablePilot: (codes?: string[]) => request<Record<string, unknown>>("POST", "/v1/admin/languages/enable-pilot", codes ? { codes } : {}),
+    knowledge: {
+      list: () => request<KnowledgeDoc[]>("GET", "/v1/admin/knowledge/documents"),
+      get: (id: string) => request<KnowledgeDetail>("GET", `/v1/admin/knowledge/documents/${id}`),
+      create: (b: { title: string; category: string; text: string; languages?: string[]; audience_roles?: string[]; project_id?: string }) => request<KnowledgeDetail>("POST", "/v1/admin/knowledge/documents", b),
+      upload: (f: FormData) => request<KnowledgeDetail>("POST", "/v1/admin/knowledge/documents/upload", f),
+      addVersion: (id: string, text: string, note?: string) => request<KnowledgeDetail>("POST", `/v1/admin/knowledge/documents/${id}/versions`, { text, note }),
+      approve: (id: string, versionId: string) => request<KnowledgeDetail>("POST", `/v1/admin/knowledge/documents/${id}/versions/${versionId}/approve`, {}),
+      deactivate: (id: string) => request<KnowledgeDetail>("POST", `/v1/admin/knowledge/documents/${id}/deactivate`, {}),
+      reindex: () => request<{ indexed: number }>("POST", "/v1/admin/knowledge/reindex", {}),
+    },
     putDirections: (directions: { source_code: string; target_code: string; readiness_tier: Tier; review_note?: string }[]) =>
       request<Direction[]>("PUT", "/v1/admin/language-directions", { directions }),
     audit: (p: { action?: string; limit?: number } = {}) => request<AuditEvent[]>("GET", `/v1/admin/audit-events${qs(p)}`),

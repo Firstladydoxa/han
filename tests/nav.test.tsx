@@ -18,15 +18,15 @@ const ids = (role: Role | null, projectId: string | null = null) => buildNav(rol
 afterEach(cleanup);
 
 describe("navigation model", () => {
-  it("shows translators only Projects (+ the project's own pages)", () => {
-    expect(ids("translator")).toEqual(["projects"]);
-    expect(ids("translator", "p1")).toEqual(["projects", "overview", "chat", "quick", "workspace"]);
+  it("shows translators only Projects and Languages (+ the project's own pages)", () => {
+    expect(ids("translator")).toEqual(["projects", "languages"]);
+    expect(ids("translator", "p1")).toEqual(["projects", "languages", "overview", "chat", "quick", "workspace"]);
   });
 
   it("gates administration, operations and audit by role (convenience only: the backend enforces access)", () => {
-    expect(ids("auditor")).toEqual(["projects", "audit"]);
-    expect(ids("technical_admin")).toEqual(["projects", "users", "admin-projects", "terminology", "readiness", "ops", "audit"]);
-    expect(ids(null)).toEqual(["projects"]);
+    expect(ids("auditor")).toEqual(["projects", "languages", "audit"]);
+    expect(ids("technical_admin")).toEqual(["projects", "languages", "users", "admin-projects", "terminology", "knowledge", "readiness", "ops", "audit"]);
+    expect(ids(null)).toEqual(["projects", "languages"]);
   });
 
   it("builds per-project page links and a captioned project section", () => {
