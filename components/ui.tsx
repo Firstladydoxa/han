@@ -49,7 +49,7 @@ export function Field({ label, htmlFor, children }: { label: string; htmlFor: st
 
 export function PageTitle({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
   return (
-    <div className="mb-6">
+    <div className="page-title mb-6">
       {eyebrow ? <p className="mb-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand">{eyebrow}</p> : null}
       <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
       {children ? <p className="mt-1 text-sm text-ink-muted">{children}</p> : null}

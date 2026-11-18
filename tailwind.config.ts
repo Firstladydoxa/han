@@ -5,10 +5,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: { DEFAULT: "#172b35", soft: "#43565d", muted: "#64757b" },
-        brand: { DEFAULT: "#167c73", dark: "#0e625b", light: "#e6f3f1" },
-        wash: "#f3f7f6",
-        line: "#dce5e5",
+        ink: { DEFAULT: "#f3efff", soft: "#c6bddc", muted: "#978eae" },
+        brand: { DEFAULT: "#a78bfa", dark: "#8b6be8", light: "#30264a" },
+        wash: "#171323",
+        line: "#3a3150",
       },
       fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "sans-serif"] },
     },

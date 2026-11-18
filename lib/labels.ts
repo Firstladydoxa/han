@@ -10,12 +10,12 @@ export const STATUS_LABEL: Record<SegmentStatus, string> = {
 };
 
 export const STATUS_STYLE: Record<SegmentStatus, string> = {
-  not_started: "bg-slate-100 text-slate-700",
-  draft: "bg-sky-100 text-sky-800",
-  in_review: "bg-amber-100 text-amber-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-red-100 text-red-800",
-  needs_attention: "bg-orange-100 text-orange-800",
+  not_started: "bg-white/10 text-slate-300",
+  draft: "bg-sky-400/15 text-sky-200",
+  in_review: "bg-amber-400/15 text-amber-200",
+  approved: "bg-emerald-400/15 text-emerald-200",
+  rejected: "bg-red-400/15 text-red-200",
+  needs_attention: "bg-orange-400/15 text-orange-200",
 };
 
 export const TIER_LABEL: Record<Tier, string> = { production: "Production", assisted: "Assisted", experimental: "Experimental", unsupported: "Unsupported" };
@@ -28,10 +28,10 @@ export const TIER_MEANING: Record<Tier, string> = {
 };
 
 export const TIER_STYLE: Record<Tier, string> = {
-  production: "bg-emerald-100 text-emerald-800",
-  assisted: "bg-sky-100 text-sky-800",
-  experimental: "bg-amber-100 text-amber-800",
-  unsupported: "bg-slate-200 text-slate-700",
+  production: "bg-emerald-400/15 text-emerald-200",
+  assisted: "bg-sky-400/15 text-sky-200",
+  experimental: "bg-amber-400/15 text-amber-200",
+  unsupported: "bg-white/10 text-slate-300",
 };
 
 /** The three visually distinct kinds of target text (spec §4.2). */
@@ -51,10 +51,10 @@ export const KIND_LABEL: Record<VersionKind, string> = {
 };
 
 export const KIND_STYLE: Record<VersionKind, string> = {
-  approved: "border-emerald-300 bg-emerald-50 text-emerald-900",
-  rejected: "border-red-300 bg-red-50 text-red-900",
-  ai: "border-sky-300 bg-sky-50 text-sky-900",
-  edited: "border-violet-300 bg-violet-50 text-violet-900",
+  approved: "border-emerald-400/40 bg-emerald-400/10 text-emerald-100",
+  rejected: "border-red-400/40 bg-red-400/10 text-red-100",
+  ai: "border-sky-400/35 bg-sky-400/10 text-sky-100",
+  edited: "border-violet-400/40 bg-violet-400/10 text-violet-100",
 };
 
 export const ROLE_LABEL: Record<string, string> = {

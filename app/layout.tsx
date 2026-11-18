@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "HAN — TNI AI-assisted translation",
-  description: "HAN prepares translation drafts for professional translators to review, edit and approve.",
+  description: "HAN is TNI’s human-in-the-loop translation workspace. AI prepares drafts; professional translators review, edit and approve.",
   robots: { index: false, follow: false },
 };
 

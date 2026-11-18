@@ -17,6 +17,8 @@ const csp = [
 ].join("; ");
 
 const nextConfig = {
+  // HAN_DIST_DIR lets a build go to a separate folder (e.g. to test a release without touching the one being served).
+  distDir: process.env.HAN_DIST_DIR || ".next",
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,

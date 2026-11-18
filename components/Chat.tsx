@@ -46,7 +46,7 @@ export function Chat({ project, onOpenWorkspace }: { project: ProjectDetail; onO
 
   return (
     <div className="card flex flex-col gap-4">
-      <ol aria-label="Conversation with HAN" className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+      <ol aria-label="Conversation with HAN" className="space-y-4">
         {messages.map((m) => (
           <li key={m.id} className={m.from === "you" ? "flex justify-end" : "flex justify-start"}>
             <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.from === "you" ? "bg-brand text-white" : "border border-line bg-wash"}`}>
@@ -70,20 +70,22 @@ export function Chat({ project, onOpenWorkspace }: { project: ProjectDetail; onO
         ))}
         <div ref={bottom} />
       </ol>
+      <div className="han-composer space-y-3">
       {error ? <Alert>{error}</Alert> : null}
-      <div className="flex flex-wrap gap-2" aria-label="Example requests">
-        {EXAMPLES.map((ex) => (
-          <button key={ex} type="button" className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-wash" onClick={() => setInput(ex)}>{ex}</button>
-        ))}
+        <div className="flex flex-wrap gap-2" aria-label="Example requests">
+          {EXAMPLES.map((ex) => (
+            <button key={ex} type="button" className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-wash" onClick={() => setInput(ex)}>{ex}</button>
+          ))}
+        </div>
+        <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
+          <label className="sr-only" htmlFor="chat-input">Message to HAN</label>
+          <textarea id="chat-input" className="input min-h-[64px] flex-1 resize-y" placeholder="Ask HAN to translate something…" value={input}
+            maxLength={20000} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(input); } }} />
+          <button type="submit" className="btn btn-primary sm:self-end" disabled={busy || !input.trim()}>{busy ? "HAN is working…" : "Send"}</button>
+        </form>
+        <p className="text-xs text-ink-muted">Press Ctrl/⌘ + Enter to send. HAN prepares drafts only; you decide what is approved.</p>
       </div>
-      <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
-        <label className="sr-only" htmlFor="chat-input">Message to HAN</label>
-        <textarea id="chat-input" className="input min-h-[64px] flex-1 resize-y" placeholder="Ask HAN to translate something…" value={input}
-          maxLength={20000} onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(input); } }} />
-        <button type="submit" className="btn btn-primary sm:self-end" disabled={busy || !input.trim()}>{busy ? "HAN is working…" : "Send"}</button>
-      </form>
-      <p className="text-xs text-ink-muted">Press Ctrl/⌘ + Enter to send. HAN prepares drafts only; you decide what is approved.</p>
     </div>
   );
 }

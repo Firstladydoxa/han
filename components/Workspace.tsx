@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { api, ApiError, type Job, type JobSegment, type JobSummary, type ProjectDetail, type TermResult, type TMResult } from "@/lib/api";
 import { buildExport, downloadText } from "@/lib/export";
 import { KIND_STYLE, TIER_LABEL, versionKind } from "@/lib/labels";
@@ -14,42 +14,50 @@ export function Workspace({ project, names, openTranslationId }: { project: Proj
   const [jobs, setJobs] = useState<JobSummary[] | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   const loadJobs = useCallback(async () => {
     try { setJobs(await api.jobs(project.id)); } catch (e) { setError(e instanceof ApiError ? e.message : "Unable to load jobs."); }
   }, [project.id]);
 
   useEffect(() => { void loadJobs(); }, [loadJobs]);
+  useEffect(() => { if (jobs && jobs.length === 0 && !openTranslationId) setNewOpen(true); }, [jobs, openTranslationId]);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="space-y-4">
-        <NewJob project={project} names={names} onCreated={(id) => { setJobId(id); void loadJobs(); }} />
-        <div className="card">
-          <h2 className="mb-3 text-sm font-semibold">Jobs</h2>
-          {error ? <Alert>{error}</Alert> : null}
-          {!jobs && !error ? <Spinner /> : null}
-          {jobs?.length === 0 ? <p className="text-xs text-ink-muted">No jobs yet. Create one above.</p> : null}
-          <ul className="space-y-2">
-            {jobs?.map((j) => (
-              <li key={j.job_id}>
-                <button type="button" onClick={() => setJobId(j.job_id)} aria-current={jobId === j.job_id}
-                  className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${jobId === j.job_id ? "border-brand bg-brand-light" : "border-line hover:bg-wash"}`}>
-                  <span className="block font-semibold">{j.title || `${names[j.source_language] ?? j.source_language} → ${names[j.target_language] ?? j.target_language}`}</span>
-                  <span className="text-ink-muted">{j.progress.approved}/{j.progress.total} approved · {j.status}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+    <div className="han-stack">
+      <section className="card">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">New translation job</h2>
+            <p className="text-xs text-ink-muted">Paste a longer text; paragraphs become segments you can review one by one.</p>
+          </div>
+          <button type="button" className="btn btn-secondary" aria-expanded={newOpen} onClick={() => setNewOpen((o) => !o)}>{newOpen ? "Hide form" : "＋ New job"}</button>
         </div>
-      </aside>
-      <div className="min-w-0">
+        {newOpen ? <div className="mt-4 border-t border-line pt-4"><NewJob project={project} names={names} onCreated={(id) => { setJobId(id); setNewOpen(false); void loadJobs(); }} /></div> : null}
+      </section>
+
+      <section aria-labelledby="jobs-title">
+        <h2 id="jobs-title" className="han-section-title">Your jobs</h2>
+        {error ? <Alert>{error}</Alert> : null}
+        {!jobs && !error ? <Spinner /> : null}
+        {jobs?.length === 0 ? <p className="text-sm text-ink-muted">No jobs yet. Create one above.</p> : null}
+        <div className="han-job-grid">
+          {jobs?.map((j) => (
+            <button key={j.job_id} type="button" className="han-job-card" onClick={() => setJobId(j.job_id)} aria-current={jobId === j.job_id}>
+              <span className="block text-sm font-semibold">{j.title || `${names[j.source_language] ?? j.source_language} → ${names[j.target_language] ?? j.target_language}`}</span>
+              <span className="mt-1 block text-xs text-ink-muted">{j.progress.approved}/{j.progress.total} approved · {j.status}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section aria-label="Selected job">
         {jobId ? <JobView key={jobId} jobId={jobId} project={project} onChanged={() => void loadJobs()} />
           : openTranslationId ? (
             <div className="card"><h2 className="mb-3 text-lg font-semibold">Quick translation</h2>
               <ReviewPanel translationId={openTranslationId} canApprove={project.can_approve} /></div>
-          ) : <EmptyState title="Select or create a job">Paste longer text on the left to translate it segment by segment.</EmptyState>}
-      </div>
+          ) : <EmptyState title="Select or create a job">Choose a job above to review its segments.</EmptyState>}
+      </section>
     </div>
   );
 }
@@ -80,8 +88,8 @@ function NewJob({ project, names, onCreated }: { project: ProjectDetail; names: 
 
   if (directions.length === 0) return <Alert kind="info">No language pairs are available for this project yet.</Alert>;
   return (
-    <form onSubmit={submit} className="card space-y-3">
-      <h2 className="text-sm font-semibold">New translation job</h2>
+    <form onSubmit={submit} className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
       <div>
         <label className="label" htmlFor="job-title">Title (optional)</label>
         <input id="job-title" className="input" maxLength={300} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -92,12 +100,13 @@ function NewJob({ project, names, onCreated }: { project: ProjectDetail; names: 
           {directions.map((d) => <option key={pairKey(d)} value={pairKey(d)}>{names[d.source_code] ?? d.source_code} → {names[d.target_code] ?? d.target_code} ({TIER_LABEL[d.readiness_tier]})</option>)}
         </select>
       </div>
+      </div>
       <div>
         <label className="label" htmlFor="job-text">Text (paragraphs become segments)</label>
-        <textarea id="job-text" className="input min-h-[140px]" value={text} onChange={(e) => setText(e.target.value)} maxLength={200000} />
+        <textarea id="job-text" className="input min-h-[160px]" value={text} onChange={(e) => setText(e.target.value)} maxLength={200000} />
       </div>
       {error ? <Alert>{error}</Alert> : null}
-      <button className="btn btn-primary w-full" type="submit" disabled={busy || !text.trim()}>{busy ? "Preparing…" : "Create job"}</button>
+      <button className="btn btn-primary" type="submit" disabled={busy || !text.trim()}>{busy ? "Preparing…" : "Create job"}</button>
     </form>
   );
 }
@@ -122,7 +131,6 @@ function JobView({ jobId, project, onChanged }: { jobId: string; project: Projec
   if (!job) return <Spinner label="Loading job" />;
 
   const pct = job.progress.total ? Math.round((job.progress.approved / job.progress.total) * 100) : 0;
-  const active = job.segments.find((s) => s.segment_id === activeId) ?? null;
   const exportApproved = buildExport(job, false);
   const exportDrafts = buildExport(job, true);
 
@@ -148,36 +156,35 @@ function JobView({ jobId, project, onChanged }: { jobId: string; project: Projec
         {job.status === "partial" || job.status === "failed" ? <div className="mt-2"><Alert kind="info">Some segments couldn&apos;t be drafted and are marked &quot;Needs attention&quot;. Please translate them manually or try again later.</Alert></div> : null}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <ul className="space-y-2" aria-label="Segments">
-          {job.segments.map((s) => <SegmentRow key={s.segment_id} seg={s} active={s.segment_id === activeId} onSelect={() => setActiveId(s.segment_id)} />)}
-        </ul>
-        <div className="xl:sticky xl:top-4 xl:self-start">
-          {active ? <ActiveSegment key={active.segment_id} seg={active} job={job} project={project} onChanged={() => { void refresh(); onChanged(); }} />
-            : <EmptyState title="Choose a segment">Select a segment to edit it, see terminology and Translation Memory matches, and review checks.</EmptyState>}
-        </div>
-      </div>
+      <ul className="space-y-3" aria-label="Segments">
+        {job.segments.map((s) => (
+          <SegmentRow key={s.segment_id} seg={s} open={s.segment_id === activeId} onToggle={() => setActiveId(s.segment_id === activeId ? null : s.segment_id)}>
+            <ActiveSegment key={s.segment_id} seg={s} job={job} project={project} onChanged={() => { void refresh(); onChanged(); }} />
+          </SegmentRow>
+        ))}
+      </ul>
     </div>
   );
 }
 
-function SegmentRow({ seg, active, onSelect }: { seg: JobSegment; active: boolean; onSelect: () => void }) {
+function SegmentRow({ seg, open, onToggle, children }: { seg: JobSegment; open: boolean; onToggle: () => void; children: ReactNode }) {
   const v = seg.current_version;
   const kind = v ? versionKind(v) : null;
   return (
-    <li>
-      <button type="button" onClick={onSelect} aria-pressed={active}
-        className={`grid w-full gap-3 rounded-xl border bg-white p-3 text-left sm:grid-cols-2 ${active ? "border-brand ring-1 ring-brand" : "border-line hover:bg-wash"}`}>
+    <li className={`han-segment-row ${open ? "is-open" : ""}`}>
+      <button type="button" onClick={onToggle} aria-expanded={open}
+        className="grid w-full gap-3 p-4 text-left sm:grid-cols-2">
         <div>
           <p className="mb-1 text-[11px] font-bold text-ink-muted">#{seg.sequence} · Source</p>
           <p className="whitespace-pre-wrap text-sm">{seg.source_text}</p>
         </div>
         <div>
-          <p className="mb-1 flex items-center justify-between gap-2 text-[11px] font-bold text-ink-muted">Target <StatusChip status={seg.status} /></p>
+          <p className="mb-1 flex items-center justify-between gap-2 text-[11px] font-bold text-ink-muted">Target <span className="inline-flex items-center gap-2"><StatusChip status={seg.status} /><span aria-hidden>{open ? "▴" : "▾"}</span></span></p>
           {v && kind ? <p className={`whitespace-pre-wrap rounded-md border px-2 py-1 text-sm ${KIND_STYLE[kind]}`}>{v.target_text}</p> : <p className="text-sm italic text-ink-muted">Not translated</p>}
           {seg.warnings.length ? <p className="mt-1 text-[11px] font-semibold text-amber-800">{seg.warnings.length} check{seg.warnings.length > 1 ? "s" : ""} to review</p> : null}
         </div>
       </button>
+      {open ? <div className="han-segment-detail">{children}</div> : null}
     </li>
   );
 }
@@ -196,7 +203,7 @@ function ActiveSegment({ seg, job, project, onChanged }: { seg: JobSegment; job:
 
   if (!seg.current_version) return <EmptyState title="No draft for this segment">HAN couldn&apos;t prepare a draft. Please translate it manually or try again later.</EmptyState>;
   return (
-    <div className="card">
+    <div>
       <ReviewPanel translationId={seg.segment_id} canApprove={project.can_approve} onChanged={onChanged}
         context={{
           warnings: seg.warnings,

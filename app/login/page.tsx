@@ -28,12 +28,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <div className="w-full max-w-[430px]">
-        <div className="mb-6 flex justify-center"><Brand /></div>
+    <div className="han-login">
+      <div className="han-atmosphere" aria-hidden>
+        <span className="han-orb han-orb-one" />
+        <span className="han-orb han-orb-two" />
+        <span className="han-grid" />
+      </div>
+      <div className="han-login-card">
+        <div className="mb-7 flex justify-center"><Brand /></div>
         <form onSubmit={submit} className="card space-y-4 p-8" aria-labelledby="login-title">
           <div>
-            <p className="mb-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand">Translation workspace</p>
+            <p className="han-eyebrow">Translation workspace</p>
             <h1 id="login-title" className="text-2xl font-bold">Welcome to HAN</h1>
             <p className="mt-1 text-sm text-ink-muted">Sign in to continue to your projects.</p>
           </div>
@@ -48,7 +53,7 @@ export default function LoginPage() {
           {error ? <Alert>{error}</Alert> : null}
           <button className="btn btn-primary w-full" type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
         </form>
-        <p className="mt-6 text-center text-xs text-ink-muted">AI translates. Humans understand. TNI decides.</p>
+        <p className="han-login-foot">AI TRANSLATES. HUMANS UNDERSTAND. TNI DECIDES.</p>
       </div>
     </div>
   );

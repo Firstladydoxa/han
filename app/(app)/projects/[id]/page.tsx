@@ -1,81 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { api, ApiError, type Language, type ProjectDetail } from "@/lib/api";
-import { Alert, PageTitle, Spinner, TierBadge } from "@/components/ui";
-import { Chat } from "@/components/Chat";
-import { QuickTranslate } from "@/components/QuickTranslate";
-import { Workspace } from "@/components/Workspace";
+import Link from "next/link";
+import { Crumbs, ProjectGate } from "@/components/ProjectGate";
+import { TierBadge } from "@/components/ui";
 
-type Tab = "chat" | "quick" | "workspace";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "chat", label: "HAN Chat" },
-  { id: "quick", label: "Quick translate" },
-  { id: "workspace", label: "Translation Workspace" },
+const ACTIONS = [
+  { slug: "chat", icon: "✧", title: "HAN Chat", text: "Ask HAN for a translation in plain language. She asks one question at a time if something is missing." },
+  { slug: "quick", icon: "⇄", title: "Quick translate", text: "Pick a language pair, paste your text and get a draft to review, edit and approve." },
+  { slug: "workspace", icon: "▤", title: "Translation workspace", text: "Work on longer texts segment by segment, with versions, checks, terminology and Translation Memory." },
 ];
 
-export default function ProjectPage() {
-  const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<ProjectDetail | null>(null);
-  const [languages, setLanguages] = useState<Language[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("chat");
-  const [openId, setOpenId] = useState<string | null>(null);
-  const openInWorkspace = (translationId: string) => { setOpenId(translationId); setTab("workspace"); };
-
-  useEffect(() => {
-    Promise.all([api.project(id), api.languages()])
-      .then(([p, l]) => { setProject(p); setLanguages(l); })
-      .catch((e: unknown) => setError(e instanceof ApiError ? e.message : "Unable to load this project."));
-  }, [id]);
-
-  const names = useMemo(() => Object.fromEntries(languages.map((l) => [l.code, l.display_name])), [languages]);
-
-  if (error) return <Alert>{error}</Alert>;
-  if (!project) return <Spinner label="Loading project" />;
-
+export default function ProjectOverviewPage() {
   return (
-    <>
-      <PageTitle eyebrow={project.domain ?? "Project"} title={project.name}>{[project.style, project.member_role.replace("_", " ")].filter(Boolean).join(" · ")}</PageTitle>
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0">
-          <div role="tablist" aria-label="Work mode" className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-line bg-white p-1">
-            {TABS.map((t) => (
-              <button key={t.id} role="tab" type="button" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`}
-                className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold ${tab === t.id ? "bg-brand text-white" : "text-ink-soft hover:bg-wash"}`}
-                onClick={() => setTab(t.id)}>{t.label}</button>
-            ))}
-          </div>
-          <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-            {tab === "chat" ? <Chat project={project} onOpenWorkspace={openInWorkspace} /> : null}
-            {tab === "quick" ? <QuickTranslate project={project} names={names} onOpenWorkspace={openInWorkspace} /> : null}
-            {tab === "workspace" ? <Workspace project={project} names={names} openTranslationId={openId} /> : null}
-          </div>
-        </div>
-        <aside className="space-y-4" aria-label="Project context">
-          <section className="card">
-            <h2 className="mb-2 text-sm font-semibold">Project instructions</h2>
+    <ProjectGate>
+      {({ project, names }) => (
+        <div className="han-page han-stack">
+          <Crumbs project={project} />
+          <section className="han-hero">
+            <p className="han-eyebrow">{project.domain ?? "Project"}</p>
+            <h1>{project.name}</h1>
+            <div className="han-hero-meta">
+              <span className="han-pill">{project.member_role.replace("_", " ")}</span>
+              {project.style ? <span className="han-pill">Style · {project.style}</span> : null}
+              <span className={`han-pill ${project.can_approve ? "han-pill-gold" : ""}`}>{project.can_approve ? "You can approve translations" : "Approval not enabled for your role"}</span>
+            </div>
+          </section>
+
+          <section aria-labelledby="work-title">
+            <h2 id="work-title" className="han-section-title">Start working</h2>
+            <div className="han-action-grid">
+              {ACTIONS.map((a) => (
+                <Link key={a.slug} href={`/projects/${project.id}/${a.slug}`} className="han-action-card">
+                  <span className="han-action-icon" aria-hidden>{a.icon}</span>
+                  <h3>{a.title}</h3>
+                  <p>{a.text}</p>
+                  <span className="han-action-go">OPEN →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="card" aria-labelledby="instr-title">
+            <h2 id="instr-title" className="han-section-title">Project instructions</h2>
             <p className="whitespace-pre-wrap text-sm text-ink-soft">{project.instructions || "No special instructions."}</p>
           </section>
-          <section className="card">
-            <h2 className="mb-2 text-sm font-semibold">Language readiness</h2>
-            {project.language_directions.length === 0 ? <p className="text-xs text-ink-muted">No language pairs are available yet.</p> : null}
-            <ul className="space-y-2">
+
+          <section aria-labelledby="ready-title">
+            <h2 id="ready-title" className="han-section-title">Language readiness</h2>
+            {project.language_directions.length === 0 ? <p className="text-sm text-ink-muted">No language pairs are available yet.</p> : null}
+            <div className="han-tier-grid">
               {project.language_directions.map((d) => (
-                <li key={`${d.source_code}-${d.target_code}`} className="text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold">{names[d.source_code] ?? d.source_code} → {names[d.target_code] ?? d.target_code}</span>
+                <div key={`${d.source_code}-${d.target_code}`} className="han-tier-card">
+                  <div className="han-tier-top">
+                    <span>{names[d.source_code] ?? d.source_code} → {names[d.target_code] ?? d.target_code}</span>
                     <TierBadge tier={d.readiness_tier} />
                   </div>
-                  {d.readiness_tier === "experimental" ? <p className="mt-0.5 text-amber-800">Internal warning: controlled pilot only.</p> : null}
-                  {d.review_note ? <p className="mt-0.5 text-ink-muted">{d.review_note}</p> : null}
-                </li>
+                  {d.readiness_tier === "experimental" ? <p className="text-xs text-amber-800">Internal warning: controlled pilot only.</p> : null}
+                  {d.review_note ? <p className="text-xs text-ink-muted">{d.review_note}</p> : null}
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
-        </aside>
-      </div>
-    </>
+        </div>
+      )}
+    </ProjectGate>
   );
 }

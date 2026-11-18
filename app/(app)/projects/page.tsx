@@ -15,7 +15,7 @@ export default function ProjectsPage() {
   }, []);
 
   return (
-    <>
+    <div className="han-page">
       <PageTitle eyebrow="Translator workspace" title="Your projects">Choose a project to start a translation or continue your work.</PageTitle>
       {error ? <Alert>{error}</Alert> : null}
       {!projects && !error ? <Spinner label="Loading projects" /> : null}
@@ -31,6 +31,6 @@ export default function ProjectsPage() {
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 }
