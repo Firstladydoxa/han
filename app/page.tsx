@@ -6,6 +6,19 @@ const capabilities = [
   { number: "03", icon: "◈", title: "Quality assistance", copy: "Spot issues, review changes and strengthen every segment." },
 ];
 
+const steps = [
+  { n: "1", title: "Ask HAN", copy: "Chat naturally. Share a text and HAN works out the language for you." },
+  { n: "2", title: "Receive a draft", copy: "A first translation arrives with warnings for anything that needs care." },
+  { n: "3", title: "Review and refine", copy: "Edit every segment with TNI terminology and approved knowledge beside you." },
+  { n: "4", title: "Approve", copy: "Only a human reviewer can approve. TNI decides what is published." },
+];
+
+const facts = [
+  { value: "400+", label: "languages in controlled testing" },
+  { value: "100%", label: "human-approved output" },
+  { value: "TNI", label: "approved terminology built in" },
+];
+
 function Hologram() {
   return (
     <div className="landing-holo" aria-hidden="true">
@@ -46,6 +59,7 @@ export default function Home() {
         </Link>
         <nav className="landing-nav-links" aria-label="Main navigation">
           <a href="#how-it-helps">How HAN helps</a>
+          <a href="#how-it-works">How it works</a>
           <a href="#human-first">Human-first</a>
           <Link href="/login" className="landing-login-link">Translator sign in <span aria-hidden="true">↗</span></Link>
         </nav>
@@ -84,6 +98,21 @@ export default function Home() {
               <h3>{item.title}</h3><p>{item.copy}</p><span className="landing-card-rule" />
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="landing-steps" id="how-it-works" aria-labelledby="steps-title">
+        <div className="landing-section-heading">
+          <div><p className="landing-eyebrow">FROM FIRST WORD TO FINAL APPROVAL</p><h2 id="steps-title">How I work with you.</h2></div>
+          <p>Four simple steps.<br />You stay in charge of every one.</p>
+        </div>
+        <ol className="landing-step-list">
+          {steps.map((x) => (
+            <li className="landing-step" key={x.n}><span className="landing-step-n">{x.n}</span><h3>{x.title}</h3><p>{x.copy}</p></li>
+          ))}
+        </ol>
+        <div className="landing-facts">
+          {facts.map((f) => <div key={f.label}><strong>{f.value}</strong><span>{f.label}</span></div>)}
         </div>
       </section>
 
