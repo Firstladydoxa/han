@@ -19,6 +19,29 @@ const facts = [
   { value: "TNI", label: "approved terminology built in" },
 ];
 
+function HanEmblem() {
+  return (
+    <svg className="landing-emblem" viewBox="0 0 200 200" role="img" aria-label="HAN logo">
+      <defs>
+        <linearGradient id="han-gold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="rgb(var(--han-secondary-bright-rgb))" />
+          <stop offset=".5" stopColor="rgb(var(--han-secondary-rgb))" />
+          <stop offset="1" stopColor="rgb(var(--han-secondary-strong-rgb))" />
+        </linearGradient>
+        <linearGradient id="han-gold-fill" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="rgb(var(--han-secondary-rgb))" stopOpacity=".28" />
+          <stop offset="1" stopColor="rgb(var(--han-primary-strong-rgb))" stopOpacity=".18" />
+        </linearGradient>
+      </defs>
+      <path d="M52 14H148A38 38 0 0 1 186 52V148A38 38 0 0 1 148 186H14V52A38 38 0 0 1 52 14Z" fill="url(#han-gold-fill)" stroke="url(#han-gold)" strokeWidth="5" />
+      <path d="M58 30H142A28 28 0 0 1 170 58V142A28 28 0 0 1 142 170H30V58A28 28 0 0 1 58 30Z" fill="none" stroke="url(#han-gold)" strokeWidth="1.6" strokeOpacity=".65" />
+      <path d="M14 150L50 186" stroke="url(#han-gold)" strokeWidth="1.6" strokeOpacity=".7" />
+      <path d="M70 62H92V90H108V62H130V138H108V110H92V138H70Z" fill="url(#han-gold)" />
+      <path d="M62 62H78M122 62H138M62 138H78M122 138H138" stroke="url(#han-gold)" strokeWidth="5" strokeLinecap="square" />
+    </svg>
+  );
+}
+
 function Hologram() {
   return (
     <div className="landing-holo" aria-hidden="true">
@@ -28,7 +51,7 @@ function Hologram() {
       <div className="landing-orbit landing-orbit-c" />
       <div className="landing-holo-core">
         <span className="landing-core-scan" />
-        <span className="landing-core-letter">H</span>
+        <HanEmblem />
         <span className="landing-core-caption">LANGUAGE INTELLIGENCE</span>
       </div>
       <span className="landing-holo-node node-one">MEANING</span>
