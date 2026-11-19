@@ -1,4 +1,6 @@
-import { PageTitle, Panel } from "@/components/ui";
+import { PageTitle } from "@/components/ui";
+
+function Panel({ children }: { children: React.ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">{children}</section>; }
 
 const workflow = [
   ["01", "Upload manuscript", "Accept the monthly Word manuscript and/or supplied XLIFF. Record edition, source version and rights metadata."],
@@ -9,7 +11,7 @@ const workflow = [
 
 export default function RhapsodyAdminPage() {
   return <div className="space-y-6">
-    <PageTitle eyebrow="ADMINISTRATION · PUBLICATIONS" title="Rhapsody Studio" description="Prepare monthly English masters, allocate translation work, oversee proofreading and control publication outputs." />
+    <PageTitle eyebrow="ADMINISTRATION · PUBLICATIONS" title="Rhapsody Studio" >Prepare monthly English masters, allocate translation work, oversee proofreading and control publication outputs.</PageTitle>
     <div className="grid gap-4 md:grid-cols-3">
       <Panel><p className="text-sm text-white/50">Current edition</p><p className="mt-2 text-2xl font-semibold">November 2026</p><p className="mt-1 text-xs text-amber-200/80">Draft · not activated</p></Panel>
       <Panel><p className="text-sm text-white/50">Master validation</p><p className="mt-2 text-2xl font-semibold">Not run</p><p className="mt-1 text-xs text-white/45">Validation runs after document ingestion.</p></Panel>
