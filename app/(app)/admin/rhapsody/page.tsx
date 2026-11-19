@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
-import { PageTitle } from "@/components/ui";
+import { useAuth } from "@/lib/auth";
+import { PageTitle, Spinner } from "@/components/ui";
 
 function Panel({ children }: { children: ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">{children}</section>; }
 
@@ -11,6 +14,9 @@ const workflow = [
 ];
 
 export default function RhapsodyAdminPage() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner label="Checking publication permissions" />;
+  if (!user || !["tni_admin", "technical_admin"].includes(user.role)) return <Panel><h1 className="text-lg font-semibold">Access restricted</h1><p className="mt-2 text-sm text-white/55">Rhapsody Studio is available to authorised HAN administrators.</p></Panel>;
   return <div className="space-y-6">
     <PageTitle eyebrow="ADMINISTRATION · PUBLICATIONS" title="Rhapsody Studio">Prepare monthly English masters, allocate translation work, oversee proofreading and control publication outputs.</PageTitle>
     <Panel><h2 className="text-lg font-semibold">Monthly master preparation</h2><p className="mt-1 text-sm text-white/50">The admin workflow will take an edition from source files to an approved, immutable English master.</p>
