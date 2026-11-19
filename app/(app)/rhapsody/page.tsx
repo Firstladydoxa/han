@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { api, type RhapsodyAssignment } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Alert, PageTitle, Spinner } from "@/components/ui";
-function Panel({children}:{children:React.ReactNode}){return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">{children}</section>;}
+function Panel({children}:{children:ReactNode}){return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5">{children}</section>;}
 export default function RhapsodyHomePage(){
  const {user,loading}=useAuth();const [items,setItems]=useState<RhapsodyAssignment[]>([]);const [busy,setBusy]=useState(true);const [error,setError]=useState("");
  useEffect(()=>{if(!user)return;api.rhapsody.assignments().then(setItems).catch(e=>setError(e instanceof Error?e.message:"Could not load assignments.")).finally(()=>setBusy(false));},[user]);
