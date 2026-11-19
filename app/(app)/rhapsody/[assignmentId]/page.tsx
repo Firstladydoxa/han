@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { api, type RhapsodyAssignmentDetail, type RhapsodyAssignmentSegment } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
