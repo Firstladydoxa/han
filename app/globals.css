@@ -38,10 +38,10 @@
   --han-line-rgb: 190 169 230;
 
   /* text */
-  --han-text-rgb: 245 240 255;
-  --han-text-soft-rgb: 205 196 228;
-  --han-muted-rgb: 166 155 189;
-  --han-faint-rgb: 118 109 137;
+  --han-text-rgb: 250 247 255;
+  --han-text-soft-rgb: 226 220 244;
+  --han-muted-rgb: 201 193 224;
+  --han-faint-rgb: 163 154 188;
 
   /* tints: hover wash and shadows (white on dark, ink on light) */
   --han-overlay-rgb: 255 255 255;
