@@ -13,6 +13,7 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
     { id: "workspace", label: "WORKSPACE", items: [
       { id: "projects", href: "/projects", label: "Projects", icon: "◈", exact: true },
       { id: "languages", href: "/languages", label: "Languages", icon: "◎" },
+      ...(user?.role === "auditor" ? [] : [{ id: "review", href: "/review", label: "Review languages", icon: "✓" }]),
     ] },
   ];
   if (projectId) {
@@ -35,6 +36,7 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
         { id: "admin-projects", href: "/admin/projects", label: "Projects & members", icon: "▦" },
         { id: "terminology", href: "/admin/terminology", label: "Terminology", icon: "❡" },
         { id: "knowledge", href: "/admin/knowledge", label: "Knowledge base", icon: "❖" },
+        { id: "evidence", href: "/admin/evidence", label: "Language evidence", icon: "◒" },
         { id: "readiness", href: "/admin/readiness", label: "Language readiness", icon: "◐" },
       ],
     });

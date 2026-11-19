@@ -55,7 +55,7 @@ export default function ProjectOverviewPage() {
                     <span>{names[d.source_code] ?? d.source_code} → {names[d.target_code] ?? d.target_code}</span>
                     <TierBadge tier={d.readiness_tier} />
                   </div>
-                  {d.readiness_tier === "experimental" ? <p className="text-xs text-amber-800">Internal warning: controlled pilot only.</p> : null}
+                  {d.readiness_tier === "experimental" ? <p className="text-xs text-warn-text">Internal warning: controlled pilot only.</p> : null}
                   {d.review_note ? <p className="text-xs text-ink-muted">{d.review_note}</p> : null}
                 </div>
               ))}

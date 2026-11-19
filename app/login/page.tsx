@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { Alert } from "@/components/ui";
 import { Brand } from "@/components/AppShell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function LoginPage() {
         <span className="han-orb han-orb-two" />
         <span className="han-grid" />
       </div>
+      <div className="han-login-theme"><ThemeToggle /></div>
       <div className="han-login-card">
         <div className="mb-7 flex justify-center"><Brand /></div>
         <form onSubmit={submit} className="card space-y-4 p-8" aria-labelledby="login-title">

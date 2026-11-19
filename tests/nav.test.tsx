@@ -19,14 +19,14 @@ afterEach(cleanup);
 
 describe("navigation model", () => {
   it("shows translators only Projects and Languages (+ the project's own pages)", () => {
-    expect(ids("translator")).toEqual(["projects", "languages"]);
-    expect(ids("translator", "p1")).toEqual(["projects", "languages", "overview", "chat", "quick", "workspace"]);
+    expect(ids("translator")).toEqual(["projects", "languages", "review"]);
+    expect(ids("translator", "p1")).toEqual(["projects", "languages", "review", "overview", "chat", "quick", "workspace"]);
   });
 
   it("gates administration, operations and audit by role (convenience only: the backend enforces access)", () => {
     expect(ids("auditor")).toEqual(["projects", "languages", "audit"]);
-    expect(ids("technical_admin")).toEqual(["projects", "languages", "users", "admin-projects", "terminology", "knowledge", "readiness", "ops", "audit"]);
-    expect(ids(null)).toEqual(["projects", "languages"]);
+    expect(ids("technical_admin")).toEqual(["projects", "languages", "review", "users", "admin-projects", "terminology", "knowledge", "evidence", "readiness", "ops", "audit"]);
+    expect(ids(null)).toEqual(["projects", "languages", "review"]);
   });
 
   it("builds per-project page links and a captioned project section", () => {

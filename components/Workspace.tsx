@@ -182,7 +182,7 @@ function SegmentRow({ seg, open, onToggle, children }: { seg: JobSegment; open: 
         <div>
           <p className="mb-1 flex items-center justify-between gap-2 text-[11px] font-bold text-ink-muted">Target <span className="inline-flex items-center gap-2"><StatusChip status={seg.status} /><span aria-hidden>{open ? "▴" : "▾"}</span></span></p>
           {v && kind ? <p className={`whitespace-pre-wrap rounded-md border px-2 py-1 text-sm ${KIND_STYLE[kind]}`}>{v.target_text}</p> : <p className="text-sm italic text-ink-muted">Not translated</p>}
-          {seg.warnings.length ? <p className="mt-1 text-[11px] font-semibold text-amber-800">{seg.warnings.length} check{seg.warnings.length > 1 ? "s" : ""} to review</p> : null}
+          {seg.warnings.length ? <p className="mt-1 text-[11px] font-semibold text-warn-text">{seg.warnings.length} check{seg.warnings.length > 1 ? "s" : ""} to review</p> : null}
         </div>
       </button>
       {open ? <div className="han-segment-detail">{children}</div> : null}

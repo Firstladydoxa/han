@@ -12,13 +12,13 @@ export function Spinner({ label = "Loading" }: { label?: string }) {
 }
 
 export function Alert({ kind = "error", children }: { kind?: "error" | "success" | "info"; children: ReactNode }) {
-  const style = { error: "border-red-200 bg-red-50 text-red-800", success: "border-emerald-200 bg-emerald-50 text-emerald-800", info: "border-sky-200 bg-sky-50 text-sky-800" }[kind];
+  const style = { error: "border-danger/40 bg-danger/15 text-danger-text", success: "border-ok/40 bg-ok/15 text-ok-text", info: "border-info/40 bg-info/15 text-info-text" }[kind];
   return <div role={kind === "error" ? "alert" : "status"} className={`rounded-lg border px-3 py-2 text-sm ${style}`}>{children}</div>;
 }
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-line bg-white p-10 text-center">
+    <div className="rounded-xl border border-dashed border-line bg-surface p-10 text-center">
       <h3 className="text-base font-semibold">{title}</h3>
       {children ? <p className="mt-1 text-sm text-ink-muted">{children}</p> : null}
     </div>

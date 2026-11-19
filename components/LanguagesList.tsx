@@ -8,8 +8,8 @@ const LABEL: Record<Availability, string> = {
   enabled: "Available", enabled_with_review: "Available with review", controlled_testing: "Controlled testing", not_enabled: "Not yet enabled",
 };
 const STYLE: Record<Availability, string> = {
-  enabled: "bg-emerald-500/15 text-emerald-300", enabled_with_review: "bg-sky-500/15 text-sky-300",
-  controlled_testing: "bg-amber-500/15 text-amber-300", not_enabled: "bg-white/5 text-ink-muted",
+  enabled: "bg-ok/15 text-ok-text", enabled_with_review: "bg-info/15 text-info-text",
+  controlled_testing: "bg-warn/15 text-warn-text", not_enabled: "bg-overlay/5 text-ink-muted",
 };
 const FILTERS: ("all" | Availability)[] = ["all", "enabled", "enabled_with_review", "controlled_testing", "not_enabled"];
 

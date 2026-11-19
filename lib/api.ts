@@ -54,6 +54,30 @@ export interface ConversationSummary {
 }
 export interface ConversationDetail extends ConversationSummary { messages: ChatMessageOut[]; has_more_before: boolean; starters: string[] }
 export type Availability = "enabled" | "enabled_with_review" | "controlled_testing" | "not_enabled";
+export type ReviewContentType = "general" | "scripture" | "ministry" | "terminology" | "other";
+export type ReviewSeverity = "none" | "minor" | "major" | "critical";
+export interface ReviewSample { content_type: ReviewContentType; text: string }
+export interface ReviewDraft { version_id: string; source_text: string; draft_text: string }
+export interface ReviewSubmit {
+  source_code: string; target_code: string; source_text: string; draft_text: string; version_id?: string;
+  content_type: ReviewContentType; adequacy: number; fluency: number; severity: ReviewSeverity; comment?: string;
+}
+export interface ReviewMine { id: string; source_code: string; target_code: string; content_type: ReviewContentType; adequacy: number; fluency: number; severity: ReviewSeverity; comment: string | null }
+export interface EvidenceCriterion { key: string; label: string; value: number | null; required: string; met: boolean }
+export interface EvidenceSummary {
+  segments: number; reviewers: number; reviewers_total: number; content_types: number; mean_adequacy: number | null; mean_fluency: number | null;
+  critical_errors: number; major_rate: number | null; reviewer_spread: number | null; days: number;
+}
+export interface EvidenceReadiness { ready_for: "assisted" | "production" | null; next_tier: string | null; criteria: EvidenceCriterion[] }
+export interface EvidenceItem {
+  source_code: string; target_code: string; source_name: string; target_name: string; tier: Tier; technical_status: string;
+  validation_status: string; summary: EvidenceSummary; readiness: EvidenceReadiness;
+}
+export interface EvidenceReview {
+  id: string; reviewer: string; source_text: string; draft_text: string; content_type: ReviewContentType; adequacy: number; fluency: number;
+  severity: ReviewSeverity; comment: string | null; created_at: string;
+}
+export interface EvidenceDetail extends EvidenceItem { reviews: EvidenceReview[] }
 export interface LanguageSupport { code: string; name: string; native_name: string | null; script: string | null; tier: Tier; availability: Availability; reviewed: boolean }
 export interface AdminDirection extends Direction {
   technical_status: "untested" | "passed" | "degraded" | "failed"; technical_checked_at: string | null; technical_detail: Record<string, unknown> | null;
@@ -145,6 +169,12 @@ export const api = {
     request<TranslateResponse>("POST", "/v1/translate", b),
   chat: (b: { project_id: string; message: string; conversation_id?: string }) => request<ChatResponse>("POST", "/v1/chat", b),
   languageSupport: () => request<LanguageSupport[]>("GET", "/v1/language-support"),
+  reviews: {
+    samples: () => request<ReviewSample[]>("GET", "/v1/reviews/samples"),
+    draft: (b: { project_id: string; source_code: string; target_code: string; text: string }) => request<ReviewDraft>("POST", "/v1/reviews/draft", b),
+    submit: (b: ReviewSubmit) => request<ReviewMine>("POST", "/v1/reviews", b),
+    mine: (source_code: string, target_code: string) => request<ReviewMine[]>("GET", `/v1/reviews/mine${qs({ source_code, target_code })}`),
+  },
   conversations: {
     list: (p: { q?: string; status?: "active" | "archived"; project_id?: string; limit?: number } = {}) => request<ConversationSummary[]>("GET", `/v1/conversations${qs(p)}`),
     create: (project_id?: string) => request<ConversationDetail>("POST", "/v1/conversations", project_id ? { project_id } : {}),
@@ -188,6 +218,11 @@ export const api = {
     testDirection: (b: { source_code: string; target_code: string; text?: string }) =>
       request<{ source_code: string; target_code: string; output: string; flag: string | null; technical_status: string }>("POST", "/v1/admin/language-directions/test", b),
     enablePilot: (codes?: string[]) => request<Record<string, unknown>>("POST", "/v1/admin/languages/enable-pilot", codes ? { codes } : {}),
+    evidence: {
+      list: () => request<EvidenceItem[]>("GET", "/v1/admin/language-evidence"),
+      get: (src: string, tgt: string) => request<EvidenceDetail>("GET", `/v1/admin/language-evidence/${src}/${tgt}`),
+      promote: (src: string, tgt: string) => request<{ tier: Tier }>("POST", `/v1/admin/language-evidence/${src}/${tgt}/promote`, {}),
+    },
     knowledge: {
       list: () => request<KnowledgeDoc[]>("GET", "/v1/admin/knowledge/documents"),
       get: (id: string) => request<KnowledgeDetail>("GET", `/v1/admin/knowledge/documents/${id}`),

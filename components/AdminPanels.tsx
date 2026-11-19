@@ -129,7 +129,7 @@ function Members({ projectId, users }: { projectId: string; users: AdminUser[] }
       <ul className="space-y-1 text-sm">{data.map((m) => (
         <li key={m.user_id} className="flex items-center justify-between gap-2">
           <span>{m.display_name} <span className="text-xs text-ink-muted">({m.email}) · {m.role}{m.can_approve ? " · can approve" : ""}</span></span>
-          <button type="button" className="text-xs font-semibold text-red-700 underline" onClick={() => void save(current.filter((c) => c.user_id !== m.user_id))}>Remove</button>
+          <button type="button" className="text-xs font-semibold text-danger-text underline" onClick={() => void save(current.filter((c) => c.user_id !== m.user_id))}>Remove</button>
         </li>))}
       </ul>
       <div className="flex flex-wrap items-end gap-2">
@@ -194,7 +194,7 @@ export function TerminologyPanel() {
   );
 }
 
-const TECH_STYLE: Record<string, string> = { passed: "text-emerald-300", degraded: "text-amber-300", failed: "text-red-300", untested: "text-ink-muted" };
+const TECH_STYLE: Record<string, string> = { passed: "text-ok-text", degraded: "text-warn-text", failed: "text-danger-text", untested: "text-ink-muted" };
 const VALIDATION = ["pending", "in_review", "validated", "rejected"] as const;
 const PAGE = 80;
 

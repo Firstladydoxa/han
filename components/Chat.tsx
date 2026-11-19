@@ -176,12 +176,12 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
             {hasMore ? <li className="text-center"><button type="button" className="text-xs underline" onClick={() => void older()}>Load earlier messages</button></li> : null}
             {messages.map((m) => (
               <li key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-brand text-white" : "border border-line bg-wash"}`}>
+                <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-brand text-on-brand" : "border border-line bg-wash"}`}>
                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wide opacity-70">{m.role === "user" ? "You" : "HAN"}</p>
                   {m.translation ? (
                     <>
                       <p>Here is my suggested translation:</p>
-                      <div className="mt-3 rounded-xl bg-white p-4 text-ink">
+                      <div className="mt-3 rounded-xl bg-surface p-4 text-ink">
                         <ReviewPanel translationId={m.translation.translation_id} canApprove={project.can_approve}
                           context={{ warnings: m.translation.warnings, tm_matches: m.translation.tm_matches, terminology: m.translation.terminology, review_note: m.translation.review_note }}
                           onOpenWorkspace={() => onOpenWorkspace(m.translation!.translation_id)} onAskHan={() => setAboutId(m.translation!.translation_id)} />
@@ -205,7 +205,7 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
           {onlyGreeting && !busy ? (
             <div className="flex flex-wrap gap-2" aria-label="Conversation starters">
               {starters.map((s) => (
-                <button key={s} type="button" className="rounded-full border border-line bg-white px-3 py-1 text-xs text-ink-soft hover:bg-wash" onClick={() => setInput(s)}>{s}</button>
+                <button key={s} type="button" className="rounded-full border border-line bg-surface px-3 py-1 text-xs text-ink-soft hover:bg-wash" onClick={() => setInput(s)}>{s}</button>
               ))}
             </div>
           ) : null}

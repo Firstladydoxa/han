@@ -106,7 +106,7 @@ export function ReviewPanel({ translationId, canApprove, context, onOpenWorkspac
             {selected ? `Version ${selected.version_number} · ${KIND_LABEL[kind]}` : "No version"}
           </span>
         </div>
-        <textarea id={`target-${translationId}`} className={`input min-h-[120px] leading-relaxed ${kind === "approved" ? "border-emerald-300 bg-emerald-50" : ""}`}
+        <textarea id={`target-${translationId}`} className={`input min-h-[120px] leading-relaxed ${kind === "approved" ? "border-ok/40 bg-ok/15" : ""}`}
           value={text} onChange={(e) => setText(e.target.value)} maxLength={200000} />
       </div>
       {context?.review_note ? <Alert kind="info">{context.review_note}</Alert> : null}
@@ -127,11 +127,11 @@ export function ReviewPanel({ translationId, canApprove, context, onOpenWorkspac
       {dirty ? <p className="text-xs text-ink-muted">Save your edits before approving, so the approval applies to exactly what you reviewed.</p> : null}
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border border-line bg-white p-3">
+        <div className="rounded-lg border border-line bg-surface p-3">
           <h3 className="mb-2 text-sm font-semibold">Quality checks</h3>
           <Warnings warnings={warnings} />
         </div>
-        <div className="rounded-lg border border-line bg-white p-3">
+        <div className="rounded-lg border border-line bg-surface p-3">
           <h3 className="mb-2 text-sm font-semibold">Project references</h3>
           <References tm={context?.tm_matches ?? []} terms={context?.terminology ?? []} />
         </div>
@@ -153,7 +153,7 @@ export function References({ tm, terms }: { tm: TMMatch[]; terms: Term[] }) {
         <li key={`${t.source_term}-${t.target_term}`}>
           <span className="font-bold">Term:</span> {t.source_term} → {t.target_term}
           {t.usage_note ? <span className="text-ink-muted"> · {t.usage_note}</span> : null}
-          {t.forbidden.length ? <span className="text-red-700"> · avoid: {t.forbidden.join(", ")}</span> : null}
+          {t.forbidden.length ? <span className="text-danger-text"> · avoid: {t.forbidden.join(", ")}</span> : null}
         </li>
       ))}
       {tm.map((m) => (
