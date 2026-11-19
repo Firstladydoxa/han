@@ -1,4 +1,6 @@
-import { PageTitle, Panel } from "@/components/ui";
+import { PageTitle } from "@/components/ui";
+
+function Panel({ children }: { children: React.ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">{children}</section>; }
 
 const editions = [
   { month: "November 2026", status: "Master awaiting activation", languages: 0, days: 30 },
@@ -7,7 +9,7 @@ const editions = [
 
 export default function RhapsodyHomePage() {
   return <div className="space-y-6">
-    <PageTitle eyebrow="TNI PUBLICATION WORKSPACE" title="Rhapsody of Realities" description="Translate each monthly edition with HAN-assisted drafting, paragraph-level human review and a controlled publishing workflow." />
+    <PageTitle eyebrow="TNI PUBLICATION WORKSPACE" title="Rhapsody of Realities" >Translate each monthly edition with HAN-assisted drafting, paragraph-level human review and a controlled publishing workflow.</PageTitle>
     <div className="grid gap-4 md:grid-cols-3">
       <Panel><p className="text-sm text-white/55">Active monthly master</p><p className="mt-2 text-2xl font-semibold">Not activated</p><p className="mt-1 text-xs text-white/45">An administrator must review and activate the English master.</p></Panel>
       <Panel><p className="text-sm text-white/55">Your assignments</p><p className="mt-2 text-2xl font-semibold">0 active</p><p className="mt-1 text-xs text-white/45">Assignments appear here when allocated.</p></Panel>
