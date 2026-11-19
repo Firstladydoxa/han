@@ -99,6 +99,15 @@ export interface Member { user_id: string; email: string; display_name: string; 
 export interface AdminTerm extends TermResult { project_id: string | null; scope: string; source_language: string; target_language: string }
 export interface AuditEvent { id: string; actor_id: string | null; actor_role: string | null; project_id: string | null; action: string; object_type: string | null; object_id: string | null; outcome: string; request_id: string | null; created_at: string; details: Record<string, unknown> | null }
 
+
+export interface RhapsodySource { id: string; filename: string; format: "docx" | "xliff"; byte_size: number; sha256: string; created_at?: string }
+export interface RhapsodyMaster { id: string; version_number: number; segment_count: number; section_count: number; validation: { segment_count?: number; section_count?: number; warnings?: string[]; blocking_errors?: string[] }; activated_at: string | null }
+export interface RhapsodyEdition { id: string; title: string; month: number; year: number; status: string; active_master_version_id: string | null; sources: RhapsodySource[]; master_versions: RhapsodyMaster[]; created_at: string; updated_at: string }
+export interface RhapsodyMasterDetail { id: string; version_number: number; validation: RhapsodyMaster["validation"]; sections: RhapsodyAssignmentDetail["sections"]; segments: { id: string; stable_key: string; section_id: string; source_text: string; source_markup: string | null; sequence: number; metadata: Record<string, unknown> }[] }
+export interface RhapsodyAssignment { id: string; master_version_id: string; target_language: string; translator_id: string; reviewer_id: string | null; due_at: string | null; status: string; edition_title?: string; }
+export interface RhapsodyAssignmentSegment { id: string; stable_key: string; section_id: string; source_text: string; source_markup: string | null; sequence: number; metadata: Record<string, unknown>; translation_status: string; translation_id: string | null; current_version_id: string | null; version_number: number | null; target_text: string }
+export interface RhapsodyAssignmentDetail { id: string; edition: { id: string; title: string; month: number; year: number }; master_version_id: string; target_language: string; status: string; due_at: string | null; sections: { id: string; stable_key: string; type: string; title: string | null; sequence: number; day_number: number | null }[]; segments: RhapsodyAssignmentSegment[] }
+
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public fields?: { field: string; message: string }[]) {
     super(message);
@@ -199,6 +208,22 @@ export const api = {
     request<{ results: TermResult[] }>("GET", `/v1/terminology/search${qs(p)}`),
   qaCheck: (b: { project_id: string; source_text: string; target_text: string; source_language: string; target_language: string }) =>
     request<{ warnings: Warning[] }>("POST", "/v1/qa/check", b),
+
+  rhapsody: {
+    editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
+    createEdition: (b: { month: number; year: number; title?: string }) => request<RhapsodyEdition>("POST", "/v1/rhapsody/editions", b),
+    uploadSource: (editionId: string, file: File) => { const form = new FormData(); form.append("file", file); return request<RhapsodySource>("POST", `/v1/rhapsody/editions/${editionId}/sources`, form); },
+    ingest: (editionId: string, sourceFileId: string) => { const form = new FormData(); form.append("source_file_id", sourceFileId); return request<{ edition_id: string; master_version_id: string; version_number: number; validation: RhapsodyMaster["validation"] }>("POST", `/v1/rhapsody/editions/${editionId}/ingest`, form); },
+    master: (editionId: string, masterVersionId: string) => request<RhapsodyMasterDetail>("GET", `/v1/rhapsody/editions/${editionId}/masters/${masterVersionId}`),
+    activate: (editionId: string, masterVersionId: string) => request<{ edition_id: string; active_master_version_id: string; status: string }>("POST", `/v1/rhapsody/editions/${editionId}/activate?master_version_id=${encodeURIComponent(masterVersionId)}`, {}),
+    assignments: () => request<RhapsodyAssignment[]>("GET", "/v1/rhapsody/assignments"),
+    createAssignment: (b: { master_version_id: string; target_language: string; translator_id: string; reviewer_id?: string; due_at?: string }) => request<RhapsodyAssignment>("POST", "/v1/rhapsody/assignments", b),
+    assignment: (id: string) => request<RhapsodyAssignmentDetail>("GET", `/v1/rhapsody/assignments/${id}`),
+    saveSegment: (assignmentId: string, segmentId: string, b: { target_text: string; expected_version_id?: string }) => request<{ segment_id: string; version_id: string; version_number: number; target_text: string; status: string }>("PUT", `/v1/rhapsody/assignments/${assignmentId}/segments/${segmentId}`, b),
+    submit: (assignmentId: string) => request<{ assignment_id: string; status: string; submitted_segments: number }>("POST", `/v1/rhapsody/assignments/${assignmentId}/submit`, {}),
+    review: (assignmentId: string, decision: "approved" | "changes_requested", note?: string) => request<{ assignment_id: string; status: string; decision: string }>("POST", `/v1/rhapsody/assignments/${assignmentId}/review`, { decision, note }),
+    comment: (assignmentId: string, body: string, segment_id?: string) => request<{ id: string; body: string; segment_id: string | null }>("POST", `/v1/rhapsody/assignments/${assignmentId}/comments`, { body, segment_id }),
+  },
   admin: {
     users: () => request<AdminUser[]>("GET", "/v1/admin/users"),
     createUser: (b: { email: string; display_name: string; role: Role; password?: string }) => request<AdminUser>("POST", "/v1/admin/users", b),
