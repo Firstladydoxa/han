@@ -107,7 +107,8 @@ export interface RhapsodyMasterDetail { id: string; version_number: number; vali
 export interface RhapsodyAssignment { id: string; master_version_id: string; target_language: string; translator_id: string; reviewer_id: string | null; due_at: string | null; status: string; edition_title?: string; }
 export interface RhapsodyAssignmentSegment { id: string; stable_key: string; section_id: string; source_text: string; source_markup: string | null; sequence: number; metadata: Record<string, unknown>; translation_status: string; translation_id: string | null; current_version_id: string | null; version_number: number | null; target_text: string }
 export interface RhapsodyAssignmentDetail { id: string; edition: { id: string; title: string; month: number; year: number }; master_version_id: string; target_language: string; status: string; due_at: string | null; sections: { id: string; stable_key: string; type: string; title: string | null; sequence: number; day_number: number | null }[]; segments: RhapsodyAssignmentSegment[] }
-\nexport class ApiError extends Error {
+
+export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public fields?: { field: string; message: string }[]) {
     super(message);
     this.name = "ApiError";
