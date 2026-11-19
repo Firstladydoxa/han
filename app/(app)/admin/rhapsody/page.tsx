@@ -33,7 +33,7 @@ export default function RhapsodyAdminPage() {
       </form></Panel>
       <Panel><h2 className="text-lg font-semibold">Monthly editions</h2><select className={field} value={selectedEdition} onChange={e=>setSelectedEdition(e.target.value)}><option value="">Select an edition</option>{editions.map(e=><option key={e.id} value={e.id}>{e.title} · {e.status}</option>)}</select>
         {selected?<div className="mt-4 space-y-3"><div className="text-sm font-medium">{selected.title} <span className="ml-2 text-xs text-white/45">{selected.sources.length} source(s)</span></div>
-          {selected.master_versions.map(m=><div key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 p-3"><div><p className="text-sm font-medium">Master v{m.version_number}</p><p className="text-xs text-white/45">{m.section_count} sections · {m.segment_count} segments</p></div>{selected.active_master_version_id===m.id?<span className="text-xs text-emerald-300">Active master</span>:<button className={button} disabled={busy||!!selected.active_master_version_id} onClick={()=>activate(m.id)}>Activate</button>}</div>)}
+          {selected.master_versions.map(m=><div key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 p-3"><div><p className="text-sm font-medium">Master v{m.version_number}</p><p className="text-xs text-white/45">{m.section_count} sections · {m.segment_count} segments</p></div>{selected.active_master_version_id===m.id?<span className="text-xs text-emerald-300">Active master</span>:<button className={button} disabled={busy} onClick={()=>activate(m.id)}>Activate</button>}</div>)}
         </div>:null}
       </Panel>
     </div>
