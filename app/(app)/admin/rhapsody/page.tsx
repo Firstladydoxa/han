@@ -1,9 +1,9 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { api, type AdminUser, type Language, type RhapsodyEdition } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Alert, PageTitle, Spinner } from "@/components/ui";
-function Panel({ children }: { children: React.ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">{children}</section>; }
+function Panel({ children }: { children: ReactNode }) { return <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">{children}</section>; }
 const field = "mt-1 w-full rounded-lg border border-white/15 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none focus:border-violet-300";
 const button = "rounded-lg bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40";
 export default function RhapsodyAdminPage() {
