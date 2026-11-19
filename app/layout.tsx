@@ -5,8 +5,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "HAN — TNI AI-assisted translation",
-  description: "HAN is TNI’s human-in-the-loop translation workspace. AI prepares drafts; professional translators review, edit and approve.",
-  robots: { index: false, follow: false },
+  description: "I am HAN, the TNI Translation Assistant. AI-assisted translation with human review, terminology and quality support.",
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
