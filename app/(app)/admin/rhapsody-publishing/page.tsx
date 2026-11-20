@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { PageTitle } from "@/components/ui";
-import { api, ApiError, type RhapsodyFont, type RhapsodyLanguageProfile } from "@/lib/api";
+import { api, ApiError, type RhapsodyFont, type RhapsodyLanguageProfile, type RhapsodyAssignmentRow } from "@/lib/api";
 
 const roles = ["body", "heading", "subheading", "scripture", "caption", "notes"] as const;
 type FontRole = typeof roles[number];
@@ -10,7 +10,7 @@ const errText = (e: unknown) => e instanceof ApiError ? e.message : "Something w
 
 export default function RhapsodyPublishingPage() {
   const [profiles, setProfiles] = useState<RhapsodyLanguageProfile[]>([]);
-  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);
+  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);\n  const [assignmentsList, setAssignmentsList] = useState<RhapsodyAssignmentRow[]>([]);\n  const [proofAssignment, setProofAssignment] = useState("");\n  const [validation, setValidation] = useState<{ status: string; sample_text: string; checks: { code: string; severity: string; message: string }[]; note: string } | null>(null);\n  const [proof, setProof] = useState<Record<string, unknown> | null>(null);
   const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState<RhapsodyLanguageProfile | null>(null);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
@@ -37,11 +37,27 @@ export default function RhapsodyPublishingPage() {
     try {
       await api.rhapsodyPublishing.saveProfile(draft.language_code, {
         direction: draft.direction, locale: draft.locale, typography: draft.typography,
-        localization: draft.localization, layout: draft.layout, fonts: assignments, status: "draft",
+        localization: draft.localization, layout: draft.layout, fonts: assignments,
       });
       await load(); setNotice("Language publishing profile saved as a draft.");
     } catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
   }
+  async function validateProfile() {
+    if (!draft) return; setBusy(true); setValidation(null);
+    try { const result = await api.rhapsodyPublishing.validateProfile(draft.language_code); setValidation(result); await load(); setNotice(result.status === "validated" ? "Font coverage checks passed. Complex-script shaping still requires visual proof." : "Profile validation found issues to resolve."); }
+    catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
+  }
+  async function activateProfile() {
+    if (!draft) return; setBusy(true);
+    try { await api.rhapsodyPublishing.activateProfile(draft.language_code); await load(); setNotice("Language publishing profile activated."); }
+    catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
+  }
+  async function generateProof() {
+    if (!proofAssignment) return; setBusy(true); setProof(null);
+    try { const result = await api.rhapsodyPublishing.createLayoutProof(proofAssignment); setProof(result.manifest); setNotice("Publishing preflight manifest generated. Estimated pagination is not final typesetting."); }
+    catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
+  }
+
   async function upload(e: FormEvent) {
     e.preventDefault(); if (!fontFile) return;
     setBusy(true);
@@ -85,8 +101,9 @@ export default function RhapsodyPublishingPage() {
               <option value="">Use publishing fallback</option>{fonts.map(f=><option key={f.id} value={f.id}>{f.family} · {f.style}</option>)}
             </select></div>)}
         </div>
-        <div className="flex justify-end"><button className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Save language profile"}</button></div>
-      </form> : <p className="text-sm text-ink-muted">No active target languages are available.</p>}
+        <div className="flex flex-wrap justify-end gap-2"><button className="btn btn-secondary" type="button" disabled={busy || !draft.id} onClick={()=>void validateProfile()}>Validate font coverage</button><button className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Save language profile"}</button><button className="btn btn-secondary" type="button" disabled={busy || draft.status !== "validated"} onClick={()=>void activateProfile()}>Activate profile</button></div>
+      </form> : <p className="text-sm text-ink-muted">No active target languages are available.</p>}\n      {validation ? <div className="rounded-lg border border-line p-3 space-y-2"><h3 className="font-semibold">Font validation · {validation.status}</h3><p className="text-sm">{validation.sample_text}</p>{validation.checks.length ? validation.checks.map((item,i)=><p key={i} className={item.severity === "error" ? "text-sm text-red-600" : "text-sm text-amber-600"}>{item.severity.toUpperCase()}: {item.message}</p>) : <p className="text-sm text-green-700">No missing characters found in the sample.</p>}<p className="text-xs text-ink-muted">{validation.note}</p></div> : null}
+
     </section>
     <section className="card space-y-4">
       <div><h2 className="text-lg font-semibold">Managed font library</h2><p className="text-sm text-ink-muted">Upload licensed OTF, TTF, WOFF or WOFF2 files. Font binaries remain private to the publishing service.</p></div>
@@ -102,6 +119,6 @@ export default function RhapsodyPublishingPage() {
         {fonts.map(f=><tr key={f.id} className="border-b border-line"><td className="py-3 font-semibold">{f.family}</td><td>{f.style}</td><td>{f.format.toUpperCase()}</td><td>{f.license_name}</td><td className="text-right"><button type="button" className="btn btn-secondary min-h-[32px] px-3" onClick={()=>void removeFont(f)}>Delete</button></td></tr>)}
       </tbody></table></div> : <p className="text-sm text-ink-muted">No fonts have been uploaded yet.</p>}
     </section>
-    <p className="text-xs text-ink-muted">Font registration and profile assignment are implemented here. Script coverage validation, visual proofing and final PDF embedding are subsequent publishing-engine integration work; this screen does not mark a profile as validated.</p>
+    <p className="text-xs text-ink-muted">Font coverage validation checks sample characters. Complex-script shaping, final visual reflow, precise pagination and PDF embedding still require the production renderer integration.</p>
   </div>;
 }
