@@ -13,6 +13,8 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
     { id: "workspace", label: "WORKSPACE", items: [
       { id: "projects", href: "/projects", label: "Projects", icon: "◈", exact: true },
       { id: "languages", href: "/languages", label: "Languages", icon: "◎" },
+      { id: "rhapsody", href: "/rhapsody", label: "Rhapsody of Realities", icon: "✦" },
+      { id: "glossary", href: "/glossary", label: "Glossary", icon: "❝" },
       ...(user?.role === "auditor" ? [] : [{ id: "review", href: "/review", label: "Review languages", icon: "✓" }]),
     ] },
   ];

@@ -58,7 +58,7 @@ export const KIND_STYLE: Record<VersionKind, string> = {
 };
 
 export const ROLE_LABEL: Record<string, string> = {
-  translator: "Translator", reviewer: "Reviewer", project_manager: "Project manager", tni_admin: "TNI administrator",
+  translator: "Translator", reviewer: "Reviewer", project_manager: "Project manager", team_leader: "Team leader", tni_admin: "TNI administrator",
   technical_admin: "Technical administrator", auditor: "Auditor",
 };
 

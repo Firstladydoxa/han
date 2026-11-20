@@ -6,7 +6,7 @@ import { formatDate, ROLE_LABEL, TIER_LABEL } from "@/lib/labels";
 import { Alert, EmptyState, Spinner, TierBadge } from "./ui";
 
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
-const ROLES: Role[] = ["translator", "reviewer", "project_manager", "tni_admin", "technical_admin", "auditor"];
+const ROLES: Role[] = ["translator", "reviewer", "project_manager", "team_leader", "tni_admin", "technical_admin", "auditor"];
 const TIERS: Tier[] = ["production", "assisted", "experimental", "unsupported"];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

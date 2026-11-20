@@ -3,7 +3,7 @@
  * it never holds provider credentials and never calls a model provider.
  */
 
-export type Role = "translator" | "reviewer" | "project_manager" | "tni_admin" | "technical_admin" | "auditor";
+export type Role = "translator" | "reviewer" | "project_manager" | "team_leader" | "tni_admin" | "technical_admin" | "auditor";
 export type Tier = "production" | "assisted" | "experimental" | "unsupported";
 export type SegmentStatus = "not_started" | "draft" | "in_review" | "approved" | "rejected" | "needs_attention";
 export type JobStatus = "queued" | "processing" | "ready" | "failed" | "partial";
@@ -38,15 +38,35 @@ export interface JobSummary { job_id: string; title: string | null; source_langu
 export interface TMResult { tm_id: string; source_text: string; target_text: string; match_percent: number; match_type: "exact" | "fuzzy"; approved_at: string; provenance: Record<string, string> }
 export interface TermResult { term_id: string; source_term: string; target_term: string; definition: string | null; domain: string | null; part_of_speech: string | null; usage_note: string | null; forbidden: string[]; status: string }
 export interface SourceRef { title: string; category: string; version: number | null }
+
+export interface RhapsodyMaster { id: string; version_number: number; segment_count: number; section_count: number; activated_at: string | null;
+  validation: { blocking_errors?: string[]; warnings?: string[]; articles?: number; expected_articles?: number; missing_days?: number[]; locked_segments?: number } }
+export interface RhapsodySource { id: string; filename: string; format: string; byte_size: number; created_at: string }
+export interface RhapsodyEdition { id: string; title: string; month: number; year: number; status: string; active_master_version_id: string | null; sources: RhapsodySource[]; master_versions: RhapsodyMaster[] }
+export interface RhapsodyAssignmentRow { id: string; master_version_id: string; target_language: string; translator_id: string; reviewer_id: string | null; due_at: string | null; status: string;
+  edition_title: string; draft_status: string; draft_total: number; draft_done: number }
+export interface RhapsodySection { id: string; stable_key: string; type: string; title: string; sequence: number; day_number: number | null; formatting: Record<string, unknown> | null }
+export interface RhapsodySegmentOut { id: string; stable_key: string; section_id: string; source_text: string; sequence: number; metadata: Record<string, unknown> | null;
+  translation_status: string; current_version_id: string | null; version_number: number | null; target_text: string; origin: string | null; draft_source: string | null;
+  glossary: { source?: string; target?: string }[]; warnings: string[] }
+export interface RhapsodyComment { id: string; segment_id: string | null; author: string; body: string; resolved: boolean; created_at: string }
+export interface RhapsodyDraftState { status: string; total: number; done: number; note: string | null }
+export interface RhapsodyAssignmentDetail { id: string; edition: { id: string; title: string; month: number; year: number }; master_version_id: string; target_language: string; status: string;
+  can_edit: boolean; translator: string | null; draft: RhapsodyDraftState; sections: RhapsodySection[]; segments: RhapsodySegmentOut[]; comments: RhapsodyComment[] }
+export interface RhapsodyMasterPreview { id: string; version_number: number; validation: RhapsodyMaster["validation"]; sections: RhapsodySection[];
+  segments: { id: string; stable_key: string; section_id: string; source_text: string; sequence: number; metadata: Record<string, unknown> | null }[] }
+export interface RhapsodySaveResult { segment_id: string; version_id: string; version_number: number; target_text: string; status: string; origin?: string; warnings?: string[] }
+
+export interface ChatActionOut { type: "open_in_workspace" | "open_rhapsody"; translation_id?: string | null; path?: string | null; label?: string | null }
 export interface ChatResponse {
   conversation_id: string; reply: string; translation: TranslateResponse | null;
-  clarification: { question: string; field: string } | null; actions: { type: "open_in_workspace"; translation_id: string }[];
+  clarification: { question: string; field: string } | null; actions: ChatActionOut[];
   sources?: SourceRef[]; message_id?: string | null; title?: string | null;
 }
 export interface ChatMessageOut {
   id: string; seq: number; role: "user" | "assistant"; content: string; kind: string; created_at: string;
   translation: TranslateResponse | null; clarification: { question: string; field: string } | null;
-  actions: { type: "open_in_workspace"; translation_id: string }[]; sources: SourceRef[];
+  actions: ChatActionOut[]; sources: SourceRef[];
 }
 export interface ConversationSummary {
   id: string; project_id: string | null; project_name: string | null; title: string; status: string; created_at: string; updated_at: string;
@@ -98,6 +118,16 @@ export interface AdminProject {
 export interface Member { user_id: string; email: string; display_name: string; role: string; can_approve: boolean }
 export interface AdminTerm extends TermResult { project_id: string | null; scope: string; source_language: string; target_language: string }
 export interface AuditEvent { id: string; actor_id: string | null; actor_role: string | null; project_id: string | null; action: string; object_type: string | null; object_id: string | null; outcome: string; request_id: string | null; created_at: string; details: Record<string, unknown> | null }
+
+export type GlossaryKind = "word" | "expression" | "sentence";
+export interface GlossaryEntry { id: string; language: string; source_text: string; target_text: string; kind: GlossaryKind; notes: string | null; updated_at: string; updated_by: string | null }
+export interface GlossaryLanguage { code: string; name: string; native_name: string | null; entries: number; can_manage: boolean; leaders: string[] }
+export interface GlossaryOverview {
+  total_entries: number; languages_with_entries: number; managed_languages: number; can_manage_any: boolean; is_admin: boolean;
+  languages: GlossaryLanguage[]; recent: GlossaryEntry[];
+}
+export interface GlossaryLead { user_id: string; display_name: string; email: string; languages: string[] }
+export interface GlossaryImportResult { added: number; updated: number; skipped: number; errors: string[] }
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public fields?: { field: string; message: string }[]) {
@@ -168,6 +198,40 @@ export const api = {
   translate: (b: { project_id: string; source_language: string; target_language: string; text: string; context?: string }) =>
     request<TranslateResponse>("POST", "/v1/translate", b),
   chat: (b: { project_id: string; message: string; conversation_id?: string }) => request<ChatResponse>("POST", "/v1/chat", b),
+  rhapsody: {
+    editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
+    edition: (id: string) => request<RhapsodyEdition>("GET", `/v1/rhapsody/editions/${id}`),
+    createEdition: (month: number, year: number) => request<RhapsodyEdition>("POST", "/v1/rhapsody/editions", { month, year }),
+    upload: (id: string, f: FormData) => request<RhapsodySource>("POST", `/v1/rhapsody/editions/${id}/sources`, f),
+    ingest: (id: string, f: FormData) => request<{ master_version_id?: string }>("POST", `/v1/rhapsody/editions/${id}/ingest`, f),
+    master: (id: string, mv: string) => request<RhapsodyMasterPreview>("GET", `/v1/rhapsody/editions/${id}/masters/${mv}`),
+    activate: (id: string, mv: string) => request<{ status: string }>("POST", `/v1/rhapsody/editions/${id}/activate?master_version_id=${mv}`),
+    start: (id: string, language: string) => request<RhapsodyAssignmentRow & { created: boolean }>("POST", `/v1/rhapsody/editions/${id}/start`, { language, draft: true }),
+    assignments: () => request<RhapsodyAssignmentRow[]>("GET", "/v1/rhapsody/assignments"),
+    assignment: (id: string) => request<RhapsodyAssignmentDetail>("GET", `/v1/rhapsody/assignments/${id}`),
+    save: (a: string, seg: string, target_text: string, expected_version_id?: string | null) =>
+      request<RhapsodySaveResult>("PUT", `/v1/rhapsody/assignments/${a}/segments/${seg}`, { target_text, expected_version_id: expected_version_id ?? undefined }),
+    redraft: (a: string, seg: string, target_text: string, expected_version_id?: string | null) =>
+      request<RhapsodySaveResult>("POST", `/v1/rhapsody/assignments/${a}/segments/${seg}/redraft`, { target_text, expected_version_id: expected_version_id ?? undefined }),
+    draftAll: (a: string) => request<{ started: boolean; draft: RhapsodyDraftState }>("POST", `/v1/rhapsody/assignments/${a}/draft`),
+    progress: (a: string) => request<{ status: string; draft: RhapsodyDraftState }>("GET", `/v1/rhapsody/assignments/${a}/progress`),
+    comment: (a: string, body: string, segment_id?: string) => request<RhapsodyComment>("POST", `/v1/rhapsody/assignments/${a}/comments`, { body, segment_id }),
+    submit: (a: string) => request<{ status: string }>("POST", `/v1/rhapsody/assignments/${a}/submit`),
+    review: (a: string, decision: "approved" | "changes_requested", note?: string) => request<{ status: string }>("POST", `/v1/rhapsody/assignments/${a}/review`, { decision, note }),
+    exportUrl: (a: string) => `/v1/rhapsody/assignments/${a}/export.docx`,
+  },
+  glossary: {
+    overview: () => request<GlossaryOverview>("GET", "/v1/glossary/overview"),
+    entries: (lang: string, p: { q?: string; kind?: string; limit?: number; offset?: number } = {}) =>
+      request<{ total: number; items: GlossaryEntry[] }>("GET", `/v1/glossary/${lang}/entries${qs(p)}`),
+    create: (lang: string, b: { source_text: string; target_text: string; kind?: GlossaryKind; notes?: string }) => request<GlossaryEntry>("POST", `/v1/glossary/${lang}/entries`, b),
+    update: (lang: string, id: string, b: Partial<{ source_text: string; target_text: string; kind: GlossaryKind; notes: string }>) => request<GlossaryEntry>("PATCH", `/v1/glossary/${lang}/entries/${id}`, b),
+    remove: (lang: string, id: string) => request<void>("DELETE", `/v1/glossary/${lang}/entries/${id}`),
+    import: (lang: string, f: FormData) => request<GlossaryImportResult>("POST", `/v1/glossary/${lang}/import`, f),
+    exportUrl: (lang: string) => `/v1/glossary/${lang}/export`,
+    leads: () => request<GlossaryLead[]>("GET", "/v1/glossary/leads"),
+    setLeads: (userId: string, languages: string[]) => request<GlossaryLead>("PUT", `/v1/glossary/leads/${userId}`, { languages }),
+  },
   languageSupport: () => request<LanguageSupport[]>("GET", "/v1/language-support"),
   reviews: {
     samples: () => request<ReviewSample[]>("GET", "/v1/reviews/samples"),

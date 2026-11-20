@@ -5,8 +5,8 @@ import { api, ApiError, type KnowledgeDetail, type KnowledgeDoc } from "@/lib/ap
 import { formatDate } from "@/lib/labels";
 import { Alert, Spinner } from "./ui";
 
-const CATEGORIES = ["institutional", "guidelines", "terminology", "language_resources", "platform", "faq"];
-const ROLES = ["translator", "reviewer", "project_manager", "tni_admin", "technical_admin", "auditor"];
+const CATEGORIES = ["institutional", "guidelines", "terminology", "language_resources", "platform", "faq", "doctrine"];
+const ROLES = ["translator", "reviewer", "project_manager", "team_leader", "tni_admin", "technical_admin", "auditor"];
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
 
 export function KnowledgePanel() {

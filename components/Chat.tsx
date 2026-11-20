@@ -189,7 +189,11 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
                       <p className="mt-3">Please review it and make any corrections before approving it.</p>
                     </>
                   ) : (
+                    <>
                     <p className="whitespace-pre-wrap">{m.content}</p>
+                    {m.actions?.filter((a) => a.type === "open_rhapsody" && a.path).map((a) => (
+                      <a key={a.path} className="btn btn-secondary mt-2 min-h-[34px] px-3 py-1 text-xs" href={a.path ?? "#"}>{a.label ?? "Open Rhapsody"}</a>))}
+                    </>
                   )}
                   {m.sources.length > 0 ? <p className="mt-2 text-xs opacity-80">Based on: {m.sources.map((s) => `${s.title}${s.version ? ` (v${s.version})` : ""}`).join("; ")}</p> : null}
                 </div>
