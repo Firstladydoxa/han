@@ -56,14 +56,6 @@ export interface RhapsodyAssignmentRow { id: string; master_version_id: string; 
 export interface RhapsodySection { id: string; stable_key: string; type: string; title: string; sequence: number; day_number: number | null; formatting: Record<string, unknown> | null }
 export interface RhapsodySegmentOut { id: string; stable_key: string; section_id: string; source_text: string; sequence: number; metadata: Record<string, unknown> | null;
   translation_status: string; current_version_id: string | null; version_number: number | null; target_text: string; origin: string | null; draft_source: string | null;
-  rhapsodyPublishing: {
-    fonts: () => request<RhapsodyFont[]>("GET", "/v1/rhapsody/publishing/fonts"),
-    uploadFont: (f: FormData) => request<RhapsodyFont>("POST", "/v1/rhapsody/publishing/fonts", f),
-    deleteFont: (id: string) => request<void>("DELETE", `/v1/rhapsody/publishing/fonts/${id}`),
-    profiles: () => request<RhapsodyLanguageProfile[]>("GET", "/v1/rhapsody/publishing/profiles"),
-    saveProfile: (code: string, body: { direction: "ltr" | "rtl"; locale: string; typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>; fonts: Record<string, string>; status: string }) =>
-      request<RhapsodyLanguageProfile>("PUT", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}`, body),
-  },
   glossary: { source?: string; target?: string }[]; warnings: string[] }
 export interface RhapsodyComment { id: string; segment_id: string | null; author: string; body: string; resolved: boolean; created_at: string }
 export interface RhapsodyDraftState { status: string; total: number; done: number; note: string | null }
@@ -214,6 +206,17 @@ export const api = {
   translate: (b: { project_id: string; source_language: string; target_language: string; text: string; context?: string }) =>
     request<TranslateResponse>("POST", "/v1/translate", b),
   chat: (b: { project_id: string; message: string; conversation_id?: string }) => request<ChatResponse>("POST", "/v1/chat", b),
+  rhapsodyPublishing: {
+    fonts: () => request<RhapsodyFont[]>("GET", "/v1/rhapsody/publishing/fonts"),
+    uploadFont: (f: FormData) => request<RhapsodyFont>("POST", "/v1/rhapsody/publishing/fonts", f),
+    deleteFont: (id: string) => request<void>("DELETE", `/v1/rhapsody/publishing/fonts/${id}`),
+    profiles: () => request<RhapsodyLanguageProfile[]>("GET", "/v1/rhapsody/publishing/profiles"),
+    saveProfile: (code: string, body: { direction: "ltr" | "rtl"; locale: string; typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>; fonts: Record<string, string> }) =>
+      request<RhapsodyLanguageProfile>("PUT", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}`, body),
+    validateProfile: (code: string) => request<{ language_code: string; status: string; sample_text: string; checks: { code: string; severity: string; message: string; role?: string; missing_codepoints?: string[] }[]; note: string }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/validate`, {}),
+    activateProfile: (code: string) => request<{ language_code: string; status: string; version: number }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/activate`, {}),
+    createLayoutProof: (assignmentId: string) => request<{ id: string; assignment_id: string; profile_version: number; translation_fingerprint: string; manifest: Record<string, unknown>; created_at: string }>("POST", `/v1/rhapsody/publishing/assignments/${assignmentId}/layout-proof`, {}),
+  },
   rhapsody: {
     editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
     edition: (id: string) => request<RhapsodyEdition>("GET", `/v1/rhapsody/editions/${id}`),
