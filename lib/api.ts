@@ -202,6 +202,7 @@ export const api = {
     editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
     edition: (id: string) => request<RhapsodyEdition>("GET", `/v1/rhapsody/editions/${id}`),
     createEdition: (month: number, year: number) => request<RhapsodyEdition>("POST", "/v1/rhapsody/editions", { month, year }),
+    chatAttachment: (f: FormData) => request<RhapsodySource & { edition_id: string; edition_title: string }>("POST", "/v1/rhapsody/chat-attachment", f),
     upload: (id: string, f: FormData) => request<RhapsodySource>("POST", `/v1/rhapsody/editions/${id}/sources`, f),
     ingest: (id: string, f: FormData) => request<{ master_version_id?: string }>("POST", `/v1/rhapsody/editions/${id}/ingest`, f),
     master: (id: string, mv: string) => request<RhapsodyMasterPreview>("GET", `/v1/rhapsody/editions/${id}/masters/${mv}`),

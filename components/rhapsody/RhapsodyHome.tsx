@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, ApiError, type Language, type RhapsodyAssignmentRow, type RhapsodyEdition } from "@/lib/api";
 import { canSeeAdmin, useAuth } from "@/lib/auth";
 import { Alert, EmptyState, Spinner } from "@/components/ui";
+import { RhapsodyChat } from "./RhapsodyChat";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
@@ -51,6 +52,7 @@ export function RhapsodyHome() {
         {[["Editions", editions.length, "Monthly issues in the system"], ["Open for translation", active, "Activated English masters"], ["My translations", mine.length, `${submitted} submitted or approved`]].map(([l, v, h]) => (
           <div className="card" key={String(l)}><p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-ink-muted">{l}</p><p className="mt-1 text-3xl font-bold">{v}</p><p className="mt-1 text-xs text-ink-muted">{h}</p></div>))}
       </div>
+      <RhapsodyChat admin={admin} onChanged={() => void load()} />
       <p className="text-sm text-ink-muted">Tip: ask HAN in chat — “Han, start the translation of Rhapsody in French for the month of November”.</p>
 
       {admin ? (
