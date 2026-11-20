@@ -105,6 +105,13 @@ export default function RhapsodyPublishingPage() {
           <div><label className="label" htmlFor="profile-direction">Writing direction</label><select id="profile-direction" className="input" value={draft.direction} onChange={e=>setDraft({...draft,direction:e.target.value as "ltr"|"rtl"})}><option value="ltr">Left to right</option><option value="rtl">Right to left</option></select></div>
           <div><label className="label">Profile status</label><div className="input bg-surface-secondary">{draft.status} · version {draft.version}</div></div>
         </div>
+        <div><h3 className="font-semibold">Page and typography settings</h3><p className="text-xs text-ink-muted">These values are used by the native proof renderer and can be tuned per language.</p></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div><label className="label" htmlFor="page-width">Page width (mm)</label><input id="page-width" type="number" min="90" max="400" className="input" value={Number(draft.layout.page_width_mm ?? 148)} onChange={e=>setDraft({...draft,layout:{...draft.layout,page_width_mm:Number(e.target.value)}})}/></div>
+          <div><label className="label" htmlFor="page-height">Page height (mm)</label><input id="page-height" type="number" min="120" max="500" className="input" value={Number(draft.layout.page_height_mm ?? 210)} onChange={e=>setDraft({...draft,layout:{...draft.layout,page_height_mm:Number(e.target.value)}})}/></div>
+          <div><label className="label" htmlFor="page-margin">Page margin (mm)</label><input id="page-margin" type="number" min="4" max="40" className="input" value={Number(draft.layout.margin_mm ?? 14)} onChange={e=>setDraft({...draft,layout:{...draft.layout,margin_mm:Number(e.target.value)}})}/></div>
+          <div><label className="label" htmlFor="body-size">Body font size (pt)</label><input id="body-size" type="number" min="6" max="24" step="0.5" className="input" value={Number(draft.typography.body_size_pt ?? 10.5)} onChange={e=>setDraft({...draft,typography:{...draft.typography,body_size_pt:Number(e.target.value)}})}/></div>
+        </div>
         <div><h3 className="font-semibold">Typography assignments</h3><p className="text-xs text-ink-muted">Choose a registered font family for each content role.</p></div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {roles.map(role => <div key={role}><label className="label capitalize" htmlFor={`font-${role}`}>{role.replace("_"," ")}</label>
