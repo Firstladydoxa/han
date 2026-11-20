@@ -118,6 +118,26 @@ export default function RhapsodyPublishingPage() {
 
     </section>
     <section className="card space-y-4">
+      <div><h2 className="text-lg font-semibold">Approved translation layout preflight</h2><p className="text-sm text-ink-muted">Generate a profile-bound layout manifest and a reflowable PDF proof for an approved translation.</p></div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+        <select className="input" aria-label="Approved Rhapsody assignment" value={proofAssignment} onChange={e=>setProofAssignment(e.target.value)}>
+          <option value="">Choose an approved translation</option>
+          {assignmentsList.filter(a=>a.status === "approved" || a.status === "published").map(a=><option key={a.id} value={a.id}>{a.edition_title} · {a.target_language} · {a.status}</option>)}
+        </select>
+        <button type="button" className="btn btn-primary" disabled={busy || !proofAssignment} onClick={()=>void generateProof()}>Generate layout proof</button>
+      </div>
+      {proof ? <div className="rounded-lg border border-line p-3 space-y-2">
+        <h3 className="font-semibold">Preflight result</h3>
+        <p className="text-sm">Language: {String(proof.language)} · Direction: {String(proof.direction)} · Profile version: {String(proof.profile_version)}</p>
+        <p className="text-sm">Estimated pages: {String((proof.pagination as Record<string, unknown> | undefined)?.estimated_pages ?? "—")}</p>
+        <p className="text-xs text-ink-muted">Estimated pagination is a rough preflight. The PDF renderer performs actual text reflow and pagination; it is not yet an exact IDML style reproduction.</p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn btn-primary" disabled={busy || !proofId} onClick={()=>void renderProofPdf()}>Render proof PDF</button>
+          {pdfReady ? <a className="btn btn-secondary" href={api.rhapsodyPublishing.proofPdfUrl(proofId)} target="_blank" rel="noreferrer">Open proof PDF</a> : null}
+        </div>
+      </div> : null}
+    </section>
+    <section className="card space-y-4">
       <div><h2 className="text-lg font-semibold">Managed font library</h2><p className="text-sm text-ink-muted">Upload licensed OTF, TTF, WOFF or WOFF2 files. Font binaries remain private to the publishing service.</p></div>
       <form onSubmit={upload} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div><label className="label" htmlFor="font-family">Font family</label><input id="font-family" className="input" required maxLength={200} value={fontForm.family} onChange={e=>setFontForm({...fontForm,family:e.target.value})}/></div>
@@ -131,6 +151,6 @@ export default function RhapsodyPublishingPage() {
         {fonts.map(f=><tr key={f.id} className="border-b border-line"><td className="py-3 font-semibold">{f.family}</td><td>{f.style}</td><td>{f.format.toUpperCase()}</td><td>{f.license_name}</td><td className="text-right"><button type="button" className="btn btn-secondary min-h-[32px] px-3" onClick={()=>void removeFont(f)}>Delete</button></td></tr>)}
       </tbody></table></div> : <p className="text-sm text-ink-muted">No fonts have been uploaded yet.</p>}
     </section>
-    <p className="text-xs text-ink-muted">Font coverage validation checks sample characters. Complex-script shaping, final visual reflow, precise pagination and PDF embedding still require the production renderer integration.</p>
+    <p className="text-xs text-ink-muted">Font coverage validation checks sample characters. The PDF proof uses WeasyPrint/Pango for reflow and pagination; exact IDML style-token mapping, complex-script visual QA and print-production approval remain outstanding.</p>
   </div>;
 }
