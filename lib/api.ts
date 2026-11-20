@@ -39,6 +39,14 @@ export interface TMResult { tm_id: string; source_text: string; target_text: str
 export interface TermResult { term_id: string; source_term: string; target_term: string; definition: string | null; domain: string | null; part_of_speech: string | null; usage_note: string | null; forbidden: string[]; status: string }
 export interface SourceRef { title: string; category: string; version: number | null }
 
+
+export interface RhapsodyFont { id: string; family: string; style: string; format: string; byte_size: number; sha256: string; license_name: string; license_note: string | null; coverage: Record<string, unknown>; created_at: string }
+export interface RhapsodyLanguageProfile {
+  id: string | null; language_code: string; language_name: string; direction: "ltr" | "rtl"; locale: string;
+  typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>;
+  status: string; version: number; fonts: Record<string, RhapsodyFont>; updated_at: string | null;
+}
+
 export interface RhapsodyMaster { id: string; version_number: number; segment_count: number; section_count: number; activated_at: string | null;
   validation: { blocking_errors?: string[]; warnings?: string[]; articles?: number; expected_articles?: number; missing_days?: number[]; locked_segments?: number } }
 export interface RhapsodySource { id: string; filename: string; format: string; byte_size: number; created_at: string }
@@ -198,6 +206,19 @@ export const api = {
   translate: (b: { project_id: string; source_language: string; target_language: string; text: string; context?: string }) =>
     request<TranslateResponse>("POST", "/v1/translate", b),
   chat: (b: { project_id: string; message: string; conversation_id?: string }) => request<ChatResponse>("POST", "/v1/chat", b),
+  rhapsodyPublishing: {
+    fonts: () => request<RhapsodyFont[]>("GET", "/v1/rhapsody/publishing/fonts"),
+    uploadFont: (f: FormData) => request<RhapsodyFont>("POST", "/v1/rhapsody/publishing/fonts", f),
+    deleteFont: (id: string) => request<void>("DELETE", `/v1/rhapsody/publishing/fonts/${id}`),
+    profiles: () => request<RhapsodyLanguageProfile[]>("GET", "/v1/rhapsody/publishing/profiles"),
+    saveProfile: (code: string, body: { direction: "ltr" | "rtl"; locale: string; typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>; fonts: Record<string, string> }) =>
+      request<RhapsodyLanguageProfile>("PUT", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}`, body),
+    validateProfile: (code: string) => request<{ language_code: string; status: string; sample_text: string; checks: { code: string; severity: string; message: string; role?: string; missing_codepoints?: string[] }[]; note: string }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/validate`, {}),
+    activateProfile: (code: string) => request<{ language_code: string; status: string; version: number }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/activate`, {}),
+    createLayoutProof: (assignmentId: string) => request<{ id: string; assignment_id: string; profile_version: number; translation_fingerprint: string; manifest: Record<string, unknown>; created_at: string }>("POST", `/v1/rhapsody/publishing/assignments/${assignmentId}/layout-proof`, {}),
+    renderProofPdf: (proofId: string) => request<{ proof_id: string; pdf_ready: boolean; byte_size: number; sha256: string; note: string }>("POST", `/v1/rhapsody/publishing/layout-proofs/${proofId}/pdf`, {}),
+    proofPdfUrl: (proofId: string) => `/v1/rhapsody/publishing/layout-proofs/${proofId}/pdf`,
+  },
   rhapsody: {
     editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
     edition: (id: string) => request<RhapsodyEdition>("GET", `/v1/rhapsody/editions/${id}`),
