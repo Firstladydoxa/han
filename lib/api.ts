@@ -215,7 +215,7 @@ export const api = {
       request<RhapsodyLanguageProfile>("PUT", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}`, body),
     validateProfile: (code: string) => request<{ language_code: string; status: string; sample_text: string; checks: { code: string; severity: string; message: string; role?: string; missing_codepoints?: string[] }[]; note: string }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/validate`, {}),
     activateProfile: (code: string) => request<{ language_code: string; status: string; version: number }>("POST", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}/activate`, {}),
-    createLayoutProof: (assignmentId: string) => request<{ id: string; assignment_id: string; profile_version: number; translation_fingerprint: string; manifest: Record<string, unknown>; created_at: string }>("POST", `/v1/rhapsody/publishing/assignments/${assignmentId}/layout-proof`, {}),
+    createLayoutProof: (assignmentId: string) => request<{ id: string; assignment_id: string; profile_version: number; translation_fingerprint: string; manifest: Record<string, unknown>; created_at: string }>("POST", `/v1/rhapsody/publishing/assignments/${assignmentId}/layout-proof`, {}),\n    renderProofPdf: (proofId: string) => request<{ proof_id: string; pdf_ready: boolean; byte_size: number; sha256: string; note: string }>("POST", `/v1/rhapsody/publishing/layout-proofs/${proofId}/pdf`, {}),\n    proofPdfUrl: (proofId: string) => `/v1/rhapsody/publishing/layout-proofs/${proofId}/pdf`,
   },
   rhapsody: {
     editions: () => request<RhapsodyEdition[]>("GET", "/v1/rhapsody/editions"),
