@@ -143,7 +143,7 @@ export function setCsrf(token: string): void { csrfToken = token; }
 export function getCsrf(): string { return csrfToken; }
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-const AUTH_PATHS = ["/v1/auth/login", "/v1/auth/me"];
+const AUTH_PATHS = ["/v1/auth/login", "/v1/auth/me", "/v1/auth/register", "/v1/auth/verify-email", "/v1/auth/resend-verification", "/v1/auth/password-reset/request", "/v1/auth/password-reset/confirm", "/v1/auth/registration/recovery-link"];
 
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
@@ -181,6 +181,12 @@ const qs = (params: Record<string, string | number | undefined>): string => {
 };
 
 export const api = {
+  register: (email: string, display_name: string, password: string) => request<{ok:boolean;email:string;message:string}>("POST", "/v1/auth/register", {email,display_name,password}),
+  verifyEmail: (email: string, code: string) => request<{ok:boolean;message:string}>("POST", "/v1/auth/verify-email", {email,code}),
+  resendVerification: (email: string) => request<{ok:boolean;message:string}>("POST", "/v1/auth/resend-verification", {email}),
+  recoverRegistration: (token: string) => request<{ok:boolean;email:string;message:string}>("POST", "/v1/auth/registration/recovery-link", {token}),
+  requestPasswordReset: (email: string) => request<{ok:boolean;message:string}>("POST", "/v1/auth/password-reset/request", {email}),
+  confirmPasswordReset: (email: string, code: string, new_password: string) => request<{ok:boolean;message:string}>("POST", "/v1/auth/password-reset/confirm", {email,code,new_password}),
   login: async (email: string, password: string): Promise<Session> => {
     const s = await request<Session>("POST", "/v1/auth/login", { email, password });
     setCsrf(s.csrf_token);

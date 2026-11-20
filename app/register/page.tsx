@@ -1,0 +1,14 @@
+"use client";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
+import { Alert } from "@/components/ui";
+import { Brand } from "@/components/AppShell";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+export default function RegisterPage(){
+ const router=useRouter();const [name,setName]=useState("");const [email,setEmail]=useState("");const [password,setPassword]=useState("");const [confirm,setConfirm]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);
+ async function submit(e:FormEvent){e.preventDefault();setError("");if(password!==confirm){setError("Your passwords do not match.");return;}setBusy(true);try{await api.register(email.trim(),name.trim(),password);sessionStorage.setItem("han_pending_email",email.trim());router.push("/verify-email");}catch(err){setError(err instanceof ApiError?err.message:"Registration could not be completed.");}finally{setBusy(false);}}
+ return <div className="han-login"><div className="han-atmosphere" aria-hidden><span className="han-orb han-orb-one"/><span className="han-orb han-orb-two"/><span className="han-grid"/></div><div className="han-login-theme"><ThemeToggle/></div><div className="han-login-card"><div className="mb-7 flex justify-center"><Brand/></div><form onSubmit={submit} className="card space-y-4 p-8"><div><p className="han-eyebrow">Join TNI</p><h1 className="text-2xl font-bold">Create your HAN account</h1><p className="mt-1 text-sm text-ink-muted">We will send a six-digit verification code to your email.</p></div><div><label className="label" htmlFor="name">Full name</label><input id="name" className="input" required maxLength={200} autoComplete="name" value={name} onChange={e=>setName(e.target.value)}/></div><div><label className="label" htmlFor="email">Email</label><input id="email" className="input" type="email" required maxLength={320} autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></div><div><label className="label" htmlFor="password">Password</label><input id="password" className="input" type="password" required minLength={12} maxLength={1024} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/><p className="mt-1 text-xs text-ink-muted">At least 12 characters.</p></div><div><label className="label" htmlFor="confirm">Confirm password</label><input id="confirm" className="input" type="password" required minLength={12} autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)}/></div>{error?<Alert>{error}</Alert>:null}<button className="btn btn-primary w-full" type="submit" disabled={busy}>{busy?"Creating account…":"Create account"}</button><p className="text-center text-sm text-ink-muted">Already registered? <Link className="font-semibold text-violet-300" href="/login">Sign in</Link></p></form></div></div>;
+}

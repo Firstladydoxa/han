@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { Alert } from "@/components/ui";
 import { Brand } from "@/components/AppShell";
@@ -22,6 +23,11 @@ export default function LoginPage() {
       await api.login(email.trim(), password);
       router.replace("/projects");
     } catch (err) {
+      if (err instanceof ApiError && err.code === "email_not_verified") {
+        sessionStorage.setItem("han_pending_email", email.trim());
+        router.replace("/verify-email");
+        return;
+      }
       setError(err instanceof ApiError ? err.message : "I couldn't sign you in. Please try again.");
     } finally {
       setBusy(false);
@@ -53,7 +59,9 @@ export default function LoginPage() {
             <input id="password" className="input" type="password" autoComplete="current-password" required maxLength={1024} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {error ? <Alert>{error}</Alert> : null}
+          <div className="flex justify-end"><Link className="text-sm font-semibold text-violet-300" href="/forgot-password">Forgot password?</Link></div>
           <button className="btn btn-primary w-full" type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+          <p className="text-center text-sm text-ink-muted">New to HAN? <Link className="font-semibold text-violet-300" href="/register">Create an account</Link></p>
         </form>
         <p className="han-login-foot">AI TRANSLATES. HUMANS UNDERSTAND. TNI DECIDES.</p>
       </div>
