@@ -45,7 +45,7 @@ export default function RhapsodyPublishingPage() {
         direction: draft.direction, locale: draft.locale, typography: draft.typography,
         localization: draft.localization, layout: draft.layout, fonts: assignments,
       });
-      await load(); setNotice("Language publishing profile saved as a draft.");
+      setValidation(null); await load(); setNotice("Language publishing profile saved as a draft.");
     } catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
   }
   async function validateProfile() {
@@ -95,7 +95,7 @@ export default function RhapsodyPublishingPage() {
       <div><h2 className="text-lg font-semibold">Language profile</h2><p className="text-sm text-ink-muted">Choose a language to edit its publishing configuration.</p></div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div><label className="label" htmlFor="profile-language">Language</label>
-          <select id="profile-language" className="input" value={selected} onChange={(e) => setSelected(e.target.value)}>
+          <select id="profile-language" className="input" value={selected} onChange={(e) => { setSelected(e.target.value); setValidation(null); setProof(null); setProofId(""); setPdfReady(false); }}>
             {profiles.map(p => <option key={p.language_code} value={p.language_code}>{p.language_name} ({p.language_code})</option>)}
           </select></div>
         {draft ? <div><label className="label" htmlFor="profile-locale">Locale</label><input id="profile-locale" className="input" value={draft.locale} onChange={e => setDraft({...draft,locale:e.target.value})}/></div> : null}
