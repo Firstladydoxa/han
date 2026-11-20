@@ -14,7 +14,7 @@ function when(iso: string | null): string {
   return d.toDateString() === new Date().toDateString() ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : d.toLocaleDateString();
 }
 
-export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDetail; onOpenWorkspace: (translationId: string) => void; about?: string | null }) {
+export function Chat({ project, onOpenWorkspace, about }: { project?: ProjectDetail | null; onOpenWorkspace?: (translationId: string) => void; about?: string | null }) {
   const [list, setList] = useState<ConversationSummary[]>([]);
   const [view, setView] = useState<"active" | "archived">("active");
   const [search, setSearch] = useState("");
@@ -37,8 +37,8 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
   const scroll = () => setTimeout(() => bottom.current?.scrollIntoView?.({ behavior: "smooth", block: "end" }), 50);
 
   const refresh = useCallback(async (q = search, status = view) => {
-    try { setList(await api.conversations.list({ project_id: project.id, q: q || undefined, status })); } catch { /* the list is a convenience */ }
-  }, [project.id, search, view]);
+    try { setList(await api.conversations.list({ project_id: project?.id, q: q || undefined, status })); } catch { /* the list is a convenience */ }
+  }, [project?.id, search, view]);
 
   const open = useCallback(async (id: string) => {
     setLoading(true);
@@ -56,12 +56,12 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
     setLoading(true);
     setError(null);
     try {
-      const c = await api.conversations.create(project.id);
+      const c = await api.conversations.create(project?.id);
       setActiveId(c.id); setMessages(c.messages); setHasMore(false); setTitle(""); setArchived(false);
       if (c.starters.length) setStarters(c.starters);
       setPanel(false);
     } catch (e) { setError(e instanceof ApiError ? e.message : ERR); } finally { setLoading(false); }
-  }, [project.id]);
+  }, [project?.id]);
 
   useEffect(() => {
     if (started.current) return;
@@ -72,7 +72,7 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
       // arriving from "Ask HAN about this" starts a clean conversation; otherwise continue the latest one
       if (existing[0] && !about) await open(existing[0].id); else await fresh();
     })();
-  }, [project.id, about, open, fresh]);
+  }, [project?.id, about, open, fresh]);
 
   async function send(text: string) {
     const message = text.trim();
@@ -176,15 +176,15 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
             {hasMore ? <li className="text-center"><button type="button" className="text-xs underline" onClick={() => void older()}>Load earlier messages</button></li> : null}
             {messages.map((m) => (
               <li key={m.id} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-brand text-on-brand" : "border border-line bg-wash"}`}>
+                <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-brand text-on-brand" : "border border-line bg-wash text-white"}`}>
                   <p className="mb-1 text-[11px] font-bold uppercase tracking-wide opacity-70">{m.role === "user" ? "You" : "HAN"}</p>
                   {m.translation ? (
                     <>
                       <p>Here is my suggested translation:</p>
                       <div className="mt-3 rounded-xl bg-surface p-4 text-ink">
-                        <ReviewPanel translationId={m.translation.translation_id} canApprove={project.can_approve}
+                        <ReviewPanel translationId={m.translation.translation_id} canApprove={project?.can_approve ?? false}
                           context={{ warnings: m.translation.warnings, tm_matches: m.translation.tm_matches, terminology: m.translation.terminology, review_note: m.translation.review_note }}
-                          onOpenWorkspace={() => onOpenWorkspace(m.translation!.translation_id)} onAskHan={() => setAboutId(m.translation!.translation_id)} />
+                          onOpenWorkspace={() => onOpenWorkspace?.(m.translation!.translation_id)} onAskHan={() => setAboutId(m.translation!.translation_id)} />
                       </div>
                       <p className="mt-3">Please review it and make any corrections before approving it.</p>
                     </>
@@ -221,7 +221,7 @@ export function Chat({ project, onOpenWorkspace, about }: { project: ProjectDeta
           ) : null}
           <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
             <label className="sr-only" htmlFor="chat-input">Message to HAN</label>
-            <textarea id="chat-input" className="input min-h-[64px] flex-1 resize-y" placeholder="Ask HAN anything about your translation work…" value={input} maxLength={20000}
+            <textarea id="chat-input" className="input min-h-[64px] flex-1 resize-y" placeholder="Ask HAN about doctrine, translation or how to use the platform…" value={input} maxLength={20000}
               disabled={archived} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(input); } }} />
             <button type="submit" className="btn btn-primary sm:self-end" disabled={busy || archived || !input.trim()}>{busy ? "HAN is working…" : "Send"}</button>

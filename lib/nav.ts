@@ -12,6 +12,7 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
   const sections: NavSection[] = [
     { id: "workspace", label: "WORKSPACE", items: [
       { id: "projects", href: "/projects", label: "Projects", icon: "◈", exact: true },
+      { id: "han-chat", href: "/chat", label: "HAN Chat", icon: "✧", exact: true },
       { id: "languages", href: "/languages", label: "Languages", icon: "◎" },
       { id: "rhapsody", href: "/rhapsody", label: "Rhapsody of Realities", icon: "✦" },
       { id: "glossary", href: "/glossary", label: "Glossary", icon: "❝" },

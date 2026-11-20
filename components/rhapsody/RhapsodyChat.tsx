@@ -7,7 +7,7 @@ import { api, ApiError, type ChatActionOut } from "@/lib/api";
 interface Msg { id: number; role: "user" | "han"; text: string; actions?: ChatActionOut[]; file?: string }
 
 const ADMIN_STARTERS = ["Han, start the layout of Rhapsody for the month of November 2026 using the word document I uploaded"];
-const TRANSLATOR_STARTERS = ["Han, start the translation of Rhapsody in French for the month of November"];
+const TRANSLATOR_STARTERS = ["HAN, please start the translation of the latest available Rhapsody of Realities edition into my registered language."];
 const ERR = "I'm sorry, I couldn't complete that just now. Please try again shortly.";
 const DOCX = ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
