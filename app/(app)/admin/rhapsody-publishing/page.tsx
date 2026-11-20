@@ -10,7 +10,13 @@ const errText = (e: unknown) => e instanceof ApiError ? e.message : "Something w
 
 export default function RhapsodyPublishingPage() {
   const [profiles, setProfiles] = useState<RhapsodyLanguageProfile[]>([]);
-  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);\n  const [assignmentsList, setAssignmentsList] = useState<RhapsodyAssignmentRow[]>([]);\n  const [proofAssignment, setProofAssignment] = useState("");\n  const [validation, setValidation] = useState<{ status: string; sample_text: string; checks: { code: string; severity: string; message: string }[]; note: string } | null>(null);\n  const [proof, setProof] = useState<Record<string, unknown> | null>(null);\n  const [proofId, setProofId] = useState("");\n  const [pdfReady, setPdfReady] = useState(false);
+  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);
+  const [assignmentsList, setAssignmentsList] = useState<RhapsodyAssignmentRow[]>([]);
+  const [proofAssignment, setProofAssignment] = useState("");
+  const [validation, setValidation] = useState<{ status: string; sample_text: string; checks: { code: string; severity: string; message: string }[]; note: string } | null>(null);
+  const [proof, setProof] = useState<Record<string, unknown> | null>(null);
+  const [proofId, setProofId] = useState("");
+  const [pdfReady, setPdfReady] = useState(false);
   const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState<RhapsodyLanguageProfile | null>(null);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
@@ -107,7 +113,8 @@ export default function RhapsodyPublishingPage() {
             </select></div>)}
         </div>
         <div className="flex flex-wrap justify-end gap-2"><button className="btn btn-secondary" type="button" disabled={busy || !draft.id} onClick={()=>void validateProfile()}>Validate font coverage</button><button className="btn btn-primary" disabled={busy}>{busy ? "Saving…" : "Save language profile"}</button><button className="btn btn-secondary" type="button" disabled={busy || draft.status !== "validated"} onClick={()=>void activateProfile()}>Activate profile</button></div>
-      </form> : <p className="text-sm text-ink-muted">No active target languages are available.</p>}\n      {validation ? <div className="rounded-lg border border-line p-3 space-y-2"><h3 className="font-semibold">Font validation · {validation.status}</h3><p className="text-sm">{validation.sample_text}</p>{validation.checks.length ? validation.checks.map((item,i)=><p key={i} className={item.severity === "error" ? "text-sm text-red-600" : "text-sm text-amber-600"}>{item.severity.toUpperCase()}: {item.message}</p>) : <p className="text-sm text-green-700">No missing characters found in the sample.</p>}<p className="text-xs text-ink-muted">{validation.note}</p></div> : null}
+      </form> : <p className="text-sm text-ink-muted">No active target languages are available.</p>}
+      {validation ? <div className="rounded-lg border border-line p-3 space-y-2"><h3 className="font-semibold">Font validation · {validation.status}</h3><p className="text-sm">{validation.sample_text}</p>{validation.checks.length ? validation.checks.map((item,i)=><p key={i} className={item.severity === "error" ? "text-sm text-red-600" : "text-sm text-amber-600"}>{item.severity.toUpperCase()}: {item.message}</p>) : <p className="text-sm text-green-700">No missing characters found in the sample.</p>}<p className="text-xs text-ink-muted">{validation.note}</p></div> : null}
 
     </section>
     <section className="card space-y-4">
