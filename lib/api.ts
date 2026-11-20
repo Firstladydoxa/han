@@ -39,6 +39,14 @@ export interface TMResult { tm_id: string; source_text: string; target_text: str
 export interface TermResult { term_id: string; source_term: string; target_term: string; definition: string | null; domain: string | null; part_of_speech: string | null; usage_note: string | null; forbidden: string[]; status: string }
 export interface SourceRef { title: string; category: string; version: number | null }
 
+
+export interface RhapsodyFont { id: string; family: string; style: string; format: string; byte_size: number; sha256: string; license_name: string; license_note: string | null; coverage: Record<string, unknown>; created_at: string }
+export interface RhapsodyLanguageProfile {
+  id: string | null; language_code: string; language_name: string; direction: "ltr" | "rtl"; locale: string;
+  typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>;
+  status: string; version: number; fonts: Record<string, RhapsodyFont>; updated_at: string | null;
+}
+
 export interface RhapsodyMaster { id: string; version_number: number; segment_count: number; section_count: number; activated_at: string | null;
   validation: { blocking_errors?: string[]; warnings?: string[]; articles?: number; expected_articles?: number; missing_days?: number[]; locked_segments?: number } }
 export interface RhapsodySource { id: string; filename: string; format: string; byte_size: number; created_at: string }
@@ -48,6 +56,14 @@ export interface RhapsodyAssignmentRow { id: string; master_version_id: string; 
 export interface RhapsodySection { id: string; stable_key: string; type: string; title: string; sequence: number; day_number: number | null; formatting: Record<string, unknown> | null }
 export interface RhapsodySegmentOut { id: string; stable_key: string; section_id: string; source_text: string; sequence: number; metadata: Record<string, unknown> | null;
   translation_status: string; current_version_id: string | null; version_number: number | null; target_text: string; origin: string | null; draft_source: string | null;
+  rhapsodyPublishing: {
+    fonts: () => request<RhapsodyFont[]>("GET", "/v1/rhapsody/publishing/fonts"),
+    uploadFont: (f: FormData) => request<RhapsodyFont>("POST", "/v1/rhapsody/publishing/fonts", f),
+    deleteFont: (id: string) => request<void>("DELETE", `/v1/rhapsody/publishing/fonts/${id}`),
+    profiles: () => request<RhapsodyLanguageProfile[]>("GET", "/v1/rhapsody/publishing/profiles"),
+    saveProfile: (code: string, body: { direction: "ltr" | "rtl"; locale: string; typography: Record<string, unknown>; localization: Record<string, unknown>; layout: Record<string, unknown>; fonts: Record<string, string>; status: string }) =>
+      request<RhapsodyLanguageProfile>("PUT", `/v1/rhapsody/publishing/profiles/${encodeURIComponent(code)}`, body),
+  },
   glossary: { source?: string; target?: string }[]; warnings: string[] }
 export interface RhapsodyComment { id: string; segment_id: string | null; author: string; body: string; resolved: boolean; created_at: string }
 export interface RhapsodyDraftState { status: string; total: number; done: number; note: string | null }
