@@ -40,6 +40,7 @@ export function buildNav(user: User | null, projectId: string | null, projectNam
         { id: "knowledge", href: "/admin/knowledge", label: "Knowledge base", icon: "❖" },
         { id: "evidence", href: "/admin/evidence", label: "Language evidence", icon: "◒" },
         { id: "readiness", href: "/admin/readiness", label: "Language readiness", icon: "◐" },
+        { id: "publishing-profiles", href: "/admin/rhapsody-publishing", label: "Rhapsody publishing", icon: "▤" },
       ],
     });
   }
