@@ -10,7 +10,7 @@ const errText = (e: unknown) => e instanceof ApiError ? e.message : "Something w
 
 export default function RhapsodyPublishingPage() {
   const [profiles, setProfiles] = useState<RhapsodyLanguageProfile[]>([]);
-  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);\n  const [assignmentsList, setAssignmentsList] = useState<RhapsodyAssignmentRow[]>([]);\n  const [proofAssignment, setProofAssignment] = useState("");\n  const [validation, setValidation] = useState<{ status: string; sample_text: string; checks: { code: string; severity: string; message: string }[]; note: string } | null>(null);\n  const [proof, setProof] = useState<Record<string, unknown> | null>(null);
+  const [fonts, setFonts] = useState<RhapsodyFont[]>([]);\n  const [assignmentsList, setAssignmentsList] = useState<RhapsodyAssignmentRow[]>([]);\n  const [proofAssignment, setProofAssignment] = useState("");\n  const [validation, setValidation] = useState<{ status: string; sample_text: string; checks: { code: string; severity: string; message: string }[]; note: string } | null>(null);\n  const [proof, setProof] = useState<Record<string, unknown> | null>(null);\n  const [proofId, setProofId] = useState("");\n  const [pdfReady, setPdfReady] = useState(false);
   const [selected, setSelected] = useState("");
   const [draft, setDraft] = useState<RhapsodyLanguageProfile | null>(null);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
@@ -52,9 +52,14 @@ export default function RhapsodyPublishingPage() {
     try { await api.rhapsodyPublishing.activateProfile(draft.language_code); await load(); setNotice("Language publishing profile activated."); }
     catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
   }
+  async function renderProofPdf() {
+    if (!proofId) return; setBusy(true); setPdfReady(false);
+    try { await api.rhapsodyPublishing.renderProofPdf(proofId); setPdfReady(true); setNotice("The reflowable PDF proof was generated and stored securely."); }
+    catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
+  }
   async function generateProof() {
     if (!proofAssignment) return; setBusy(true); setProof(null);
-    try { const result = await api.rhapsodyPublishing.createLayoutProof(proofAssignment); setProof(result.manifest); setNotice("Publishing preflight manifest generated. Estimated pagination is not final typesetting."); }
+    try { const result = await api.rhapsodyPublishing.createLayoutProof(proofAssignment); setProof(result.manifest); setProofId(result.id); setPdfReady(false); setNotice("Publishing preflight manifest generated. You can now render a reflowable proof PDF."); }
     catch (err) { setNotice(errText(err)); } finally { setBusy(false); }
   }
 
